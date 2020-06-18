@@ -7,7 +7,7 @@ some experiments with curiosity learning
 
 ![](images/lunar_lander_ppo.gif)
 
-![](results/training_score_per_iterations.gif)
-![](results/training_score_per_episode.gif)
+![](results/training_score_per_iterations.png)
+![](results/training_score_per_episode.png)
 
 * note : A2C was running in 8 paralel environments, total number of iterations (games) need to be multiplied by 8
