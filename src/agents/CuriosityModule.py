@@ -23,19 +23,28 @@ class CuriosityModule:
         
     def train(self, batch_size = 32):
         if self.buffer.is_full() == False:
-            return -1
+            return None
 
-        state_t, action_t, state_next_t = self.buffer.sample(batch_size, self.model.device)
+        batch_count = self.buffer.length()//batch_size
 
-        state_next_prediction_t = self.model.forward(state_t, action_t)
+        loss_sum = 0.0
+        for i in range(batch_count):
+            state_t, action_t, state_next_t = self.buffer.sample(batch_size, self.model.device)
 
-        loss = ((state_next_t - state_next_prediction_t)**2.0).mean()
+            state_next_prediction_t = self.model.forward(state_t, action_t)
 
-        self.optimizer.zero_grad()
-        loss.backward() 
-        self.optimizer.step()
+            loss = ((state_next_t - state_next_prediction_t)**2.0).mean()
 
-        return loss
+            self.optimizer.zero_grad()
+            loss.backward() 
+            self.optimizer.step()
+            loss_sum+= loss.detach().to("cpu").numpy()
+
+        self.buffer.clear()
+
+        loss_sum = loss_sum/batch_size
+
+        return loss_sum
 
     def eval(self, state, action, state_next):
         state_t         = state.clone().to(self.model.device)
@@ -55,6 +64,12 @@ class CuriosityModule:
         curiosity = curiosity.to("cpu").detach().numpy()
 
         return curiosity
+
+    def save(self, path):
+        self.model.save(path)
+
+    def load(self, path):
+        self.model.load(path)
 
     def _one_hot_action(self, action, batch_size):
         action_t_one_hot = torch.zeros((batch_size, self.actions_count))

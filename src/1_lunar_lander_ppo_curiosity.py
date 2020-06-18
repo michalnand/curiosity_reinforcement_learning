@@ -32,6 +32,7 @@ max_episode_steps = 300
 log = TrainingLog(path + "result/result.log")
 best = False
 
+'''
 for episode in range(max_episodes):
 
     env.reset()
@@ -62,9 +63,9 @@ for episode in range(max_episodes):
         print("\n\n")
 
 agent.save(path)
+'''
 
 agent.load(path)
-
 
 agent.disable_training()
 agent.iterations = 0

@@ -7,8 +7,13 @@ import models.lunar_lander_a2c.src.config
 
 import time
 
+from common.TrainingLog import *
+
+
+path = "models/lunar_lander_a2c/"
 
 paralel_envs_count = 8
+
 
 class SetRewardRange(gym.RewardWrapper):
     def __init__(self, env):
@@ -25,14 +30,14 @@ class SetRewardRange(gym.RewardWrapper):
         if reward > 1.0:
             reward = 1.0
 
-        return obs, reward, [done, done], info
+        return obs, reward, done, info
 
-envs = [] 
+envs = []
 
 for i in range(paralel_envs_count):
     env = gym.make("LunarLander-v2")
 
-    env = SetRewardRange(env)
+    #env = SetRewardRange(env)
     obs = env.reset()
     env.seed(i)
 
@@ -42,6 +47,7 @@ obs             = envs[0].observation_space
 actions_count   = envs[0].action_space.n
 
 
+log = TrainingLog(path + "result/result.log")
 
 
 model  = models.lunar_lander_a2c.src.model
@@ -49,19 +55,16 @@ config = models.lunar_lander_a2c.src.config.Config()
  
 agent = agents.AgentA2C(envs, model, config)
 
-score = 0
-while agent.iterations < 100000:
-    reward = agent.main()
-    score+= reward
-
-    if agent.iterations%256 == 0:
-        envs[0].render()
-        print(agent.iterations, score)
+while log.episodes < 2000:
+    reward, done = agent.main()
+    log.add(reward, done)
 
 
+'''
 agent.disable_training()
 agent.iterations = 0
 while True:
     agent.main()
     envs[0].render()
     time.sleep(0.01)
+'''

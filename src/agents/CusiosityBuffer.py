@@ -9,6 +9,9 @@ class CusiosityBuffer:
     def __init__(self, size):
         self.size   = size
        
+        self.clear()
+
+    def clear(self):
         self.ptr    = 0 
         self.buffer = []
 

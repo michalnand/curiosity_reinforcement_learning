@@ -3,7 +3,7 @@ import torch.nn as nn
 
 class Model(torch.nn.Module):
 
-    def __init__(self, input_shape, outputs_count):
+    def __init__(self, input_shape, outputs_count, hidden_count = 64):
         super(Model, self).__init__()
 
         #self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -12,19 +12,24 @@ class Model(torch.nn.Module):
         self.input_shape    = input_shape
         self.outputs_count  = outputs_count
         
-        features_count = 128
          
         self.features_layers = [ 
-                                    nn.Linear(input_shape[0], features_count),
+                                    nn.Linear(input_shape[0], hidden_count),
                                     nn.ReLU(),                      
                             ]
 
         self.layers_policy = [
-                                nn.Linear(features_count, outputs_count)
+                                nn.Linear(hidden_count, hidden_count),
+                                nn.ReLU(),   
+
+                                nn.Linear(hidden_count, outputs_count)
                             ]
 
-        self.layers_critic = [                     
-                                nn.Linear(features_count, 1)
+        self.layers_critic = [          
+                                nn.Linear(hidden_count, hidden_count),
+                                nn.ReLU(),   
+
+                                nn.Linear(hidden_count, 1)
                             ]
 
 

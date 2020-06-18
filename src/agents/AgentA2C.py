@@ -58,20 +58,18 @@ class AgentA2C():
             
         self.observations[env_id], reward, done, _ = self.envs[env_id].step(action_t.item())
         
-        round_done = done[0]
-        game_done  = done[1] 
 
         if self.enabled_training:
             self.logits_b[env_id][self.idx]     = logits.squeeze(0)
             self.values_b[env_id][self.idx]     = value.squeeze(0)
             self.action_b[env_id][self.idx]     = action_t.item()
             self.rewards_b[env_id][self.idx]    = reward
-            self.done_b[env_id][self.idx]       = round_done
+            self.done_b[env_id][self.idx]       = done
 
-        if game_done:
+        if done:
             self.envs[env_id].reset()
 
-        return reward
+        return reward, done
         
     def compute_loss(self, env_id = 0):
         target_values_b = self._calc_q_values(self.rewards_b[env_id], self.values_b[env_id].detach().cpu().numpy(), self.done_b[env_id])
@@ -112,15 +110,20 @@ class AgentA2C():
     
     def main(self):
         reward = 0
+        done = False
         for env_id in range(self.envs_count):
-            tmp = self.process_env(env_id)
+            tmp, tmp_done = self.process_env(env_id)
             if env_id == 0:
                 reward = tmp
+                done = tmp_done
 
         if self.enabled_training:
             self.idx+= 1
         
-        if self.idx > self.batch_size-1:      
+        if self.idx > self.batch_size-1:   
+
+            self.rewards_b = (self.rewards_b - self.rewards_b.mean())/self.rewards_b.std()   
+            
             loss = 0
             for env_id in range(self.envs_count):
                 loss+= self.compute_loss(env_id)
@@ -142,7 +145,7 @@ class AgentA2C():
 
         self.iterations+= 1
 
-        return reward
+        return reward, done
             
     def save(self, save_path):
         self.model.save(save_path)
