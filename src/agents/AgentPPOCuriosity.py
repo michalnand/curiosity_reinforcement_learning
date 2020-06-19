@@ -46,8 +46,10 @@ class AgentPPOCuriosity():
 
         self.buffer         = Buffer()
 
+
         self.model_ppo          = model_ppo.Model(self.state_shape, self.actions_count)
-        self.optimizer_ppo      = torch.optim.Adam(self.model_ppo.parameters(), lr=config.learning_rate)
+        self.model_ppo_old      = model_ppo.Model(self.state_shape, self.actions_count)
+        self.optimizer_ppo  = torch.optim.Adam(self.model_ppo.parameters(), lr=config.learning_rate)
         
         self.curiosity_module = CuriosityModule(model_curiosity, self.state_shape, self.actions_count, config.curiosity_learning_rate, config.curiosity_buffer_size)
 
@@ -99,6 +101,7 @@ class AgentPPOCuriosity():
 
     def load(self, save_path):
         self.model_ppo.load(save_path)
+        self.model_ppo_old.load(save_path)
         self.curiosity_module.load(save_path)
     
 
@@ -152,10 +155,10 @@ class AgentPPOCuriosity():
         
         #TODO
         #copy new weights into old policy:
-        #self.policy_old.load_state_dict(self.policy.state_dict())
+        self.model_ppo_old.load_state_dict(self.model_ppo.state_dict())
 
     def _get_action(self, state):
-        policy, _ = self.model_ppo.forward(state)
+        policy, _ = self.model_ppo_old.forward(state)
 
         policy = policy.squeeze(0)
 

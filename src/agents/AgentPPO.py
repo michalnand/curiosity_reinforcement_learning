@@ -46,6 +46,7 @@ class AgentPPO():
         self.buffer         = Buffer()
 
         self.model          = model.Model(self.state_shape, self.actions_count)
+        self.model_old      = model.Model(self.state_shape, self.actions_count)
         self.optimizer      = torch.optim.Adam(self.model.parameters(), lr=config.learning_rate)
 
         self.enable_training()
@@ -91,7 +92,8 @@ class AgentPPO():
 
     def load(self, save_path):
         self.model.load(save_path)
-    
+        self.model_old.load(save_path)
+
 
     def _train(self):   
         #compute discounted rewards 
@@ -135,10 +137,10 @@ class AgentPPO():
         
         #TODO
         #copy new weights into old policy:
-        #self.policy_old.load_state_dict(self.policy.state_dict())
+        self.model_old.load_state_dict(self.model.state_dict())
 
     def _get_action(self, state):
-        policy, _ = self.model.forward(state)
+        policy, _ = self.model_old.forward(state)
 
         policy = policy.squeeze(0)
 
