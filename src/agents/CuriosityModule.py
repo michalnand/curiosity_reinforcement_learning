@@ -21,11 +21,9 @@ class CuriosityModule:
             action_[action] = 1.0
             self.buffer.add(state, action_)
         
-    def train(self, batch_size = 32):
+    def train(self, batch_size = 32, batch_count = 8):
         if self.buffer.is_full() == False:
             return None
-
-        batch_count = self.buffer.length()//batch_size
 
         loss_sum = 0.0
         for i in range(batch_count):

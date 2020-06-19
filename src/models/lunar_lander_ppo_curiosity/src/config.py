@@ -9,8 +9,10 @@ class Config():
         self.training_epochs    = 4
 
         self.learning_rate      = 0.002
-        self.curiosity_learning_rate = 0.0001
 
+        self.curiosity_learning_rate = 0.0001
+        self.curiosity_scale         = 10.0
+        self.curiosity_buffer_size   = 1024
         
 
 

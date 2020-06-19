@@ -37,6 +37,7 @@ class AgentPPOCuriosity():
         self.entropy_beta   = config.entropy_beta
         self.update_iterations = config.update_iterations
         self.training_epochs    = config.training_epochs
+        self.curiosity_scale = config.curiosity_scale
        
         self.state_shape = self.env.observation_space.shape
         self.actions_count     = self.env.action_space.n
@@ -48,7 +49,7 @@ class AgentPPOCuriosity():
         self.model_ppo          = model_ppo.Model(self.state_shape, self.actions_count)
         self.optimizer_ppo      = torch.optim.Adam(self.model_ppo.parameters(), lr=config.learning_rate)
         
-        self.curiosity_module = CuriosityModule(model_curiosity, self.state_shape, self.actions_count, config.curiosity_learning_rate)
+        self.curiosity_module = CuriosityModule(model_curiosity, self.state_shape, self.actions_count, config.curiosity_learning_rate, config.curiosity_buffer_size)
 
         self.enable_training()
 
@@ -110,11 +111,11 @@ class AgentPPOCuriosity():
 
         states_next_t = torch.cat((states_t[1:], states_t[-1].unsqueeze(0)), dim=0)
 
-        curiosity = self.curiosity_module.eval(states_t, actions_t, states_next_t)
+        curiosity = self.curiosity_scale*self.curiosity_module.eval(states_t, actions_t, states_next_t)
 
 
         #compute discounted rewards 
-        rewards = self._calc_rewards(self.buffer.rewards, self.buffer.dones) + curiosity
+        rewards = self._calc_rewards(self.buffer.rewards, self.buffer.dones) #+ curiosity
         
         #normalise rewards
         rewards = torch.tensor(rewards).to(self.model_ppo.device)
