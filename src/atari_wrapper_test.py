@@ -7,11 +7,11 @@ import common.atari_wrapper
 from common.TrainingLog import *
 
 path = "models/atari_ppo/"
-log = TrainingLog(path + "result/result.log", episode_skip_log = 1)
+log = TrainingLog(path + "result/result.log", episode_skip_log = 100)
 
-#env = gym.make("PongNoFrameskip-v4")
+env = gym.make("PongNoFrameskip-v4")
 #env = gym.make("BreakoutNoFrameskip-v4")
-env = gym.make("MsPacmanNoFrameskip-v4")
+#env = gym.make("MsPacmanNoFrameskip-v4")
 env = common.atari_wrapper.Create(env)
 
 env.reset()
