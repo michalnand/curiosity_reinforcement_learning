@@ -70,21 +70,21 @@ class TrainingLog:
             self.episode_score_sum = 0
             self.episode_iterations_sum = 0
             
-            log_result = False
-            if self.iterations_skip_mode:
-                if self.iterations%self.episode_skip_log == 0:
-                    log_result = True
-            else:
-                if self.episodes%self.episode_skip_log == 0:
-                    log_result = True
+        log_result = False
+        if self.iterations_skip_mode:
+            if self.iterations%self.episode_skip_log == 0:
+                log_result = True
+        else:
+            if self.episodes%self.episode_skip_log == 0:
+                log_result = True
 
-            if log_result:
-                print(log_str)
+        if log_result:
+            print(log_str)
 
-                if self.file_name != None:
-                    f = open(self.file_name,"a+")
-                    f.write(log_str+"\n")
-                    f.close()
+            if self.file_name != None:
+                f = open(self.file_name,"a+")
+                f.write(log_str+"\n")
+                f.close()
 
 
 
