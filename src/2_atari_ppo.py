@@ -16,7 +16,6 @@ env = gym.make("BreakoutNoFrameskip-v4")
 #env = gym.make("MsPacmanNoFrameskip-v4")
 
 env = common.atari_wrapper.Create(env)
-env.reset()
 
 obs             = env.observation_space
 actions_count   = env.action_space.n
@@ -36,8 +35,6 @@ trainig.run()
 
 '''
 agent.load(path)
-
-
 agent.disable_training()
 agent.iterations = 0
 while True:
@@ -45,4 +42,3 @@ while True:
     env.render()
     time.sleep(0.01)
 '''
-
