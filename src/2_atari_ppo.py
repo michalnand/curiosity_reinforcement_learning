@@ -2,7 +2,7 @@ import agents
 import time
 import gym
 import numpy
-from common.atari_wrapper import 8
+from common.atari_wrapper import *
 
 import models.atari_ppo.src.model
 import models.atari_ppo.src.config
