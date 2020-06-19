@@ -9,6 +9,9 @@ class TrainingLog:
         self.episodes           = 0
         self.episode_score_sum = 0.0
         self.episode_iterations_sum = 0.0
+        self.episode_score_sum_         = self.episode_score_sum
+        self.episode_iterations_sum_    = self.episode_iterations_sum
+
         self.total_score        = 0.0
 
 
@@ -56,26 +59,29 @@ class TrainingLog:
                     self.episode_score_best = self.episode_score_sum_filtered
                     self.is_best = True
 
-            dp = 3
 
-            log_str = ""
-            log_str+= str(self.iterations) + " "
-            log_str+= str(self.episodes) + " "
-            log_str+= str(round(self.episode_iterations_sum, dp)) + " "
-            log_str+= str(round(self.total_score, dp)) + " "
-            log_str+= str(round(self.episode_score_sum, dp)) + " "
-            log_str+= str(round(self.episode_score_sum_filtered, dp)) + " "
-            log_str+= str(round(self.episode_time_filtered, 4)) + " "
+            self.episode_score_sum_         = self.episode_score_sum
+            self.episode_iterations_sum_    = self.episode_iterations_sum
 
             self.episode_score_sum = 0
             self.episode_iterations_sum = 0
-            
+        
         if self.iterations_skip_mode:
             tmp = self.iterations
         else:
             tmp = self.episodes
 
         if tmp%self.episode_skip_log == 0:
+            dp = 3
+            log_str = ""
+            log_str+= str(self.iterations) + " "
+            log_str+= str(self.episodes) + " "
+            log_str+= str(round(self.episode_iterations_sum_, dp)) + " "
+            log_str+= str(round(self.total_score, dp)) + " "
+            log_str+= str(round(self.episode_score_sum_, dp)) + " "
+            log_str+= str(round(self.episode_score_sum_filtered, dp)) + " "
+            log_str+= str(round(self.episode_time_filtered, 4)) + " "
+
             print(log_str)
 
             f = open(self.file_name,"a+")

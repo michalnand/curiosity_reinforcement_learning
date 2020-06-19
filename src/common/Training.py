@@ -71,7 +71,7 @@ class TrainingIterations:
 
     def run(self):
         
-        log = TrainingLog(self.saving_path + "result/result.log", self.iterations_count, True)
+        log = TrainingLog(self.saving_path + "result/result.log", self.saving_period_iterations, True)
         new_best = False
 
         for iteration in range(self.iterations_count):
