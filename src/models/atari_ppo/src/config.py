@@ -8,7 +8,7 @@ class Config():
         self.entropy_beta       = 0.01
         self.training_epochs    = 4
 
-        self.learning_rate  = 0.00025
+        self.learning_rate  = 0.0005
         
 
 
