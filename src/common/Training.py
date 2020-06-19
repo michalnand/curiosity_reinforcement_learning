@@ -60,7 +60,7 @@ class TrainingEpisodes:
 
 
 class TrainingIterations:
-    def __init__(self, env, agent, iterations_count, saving_path, saving_period_iterations = 500):
+    def __init__(self, env, agent, iterations_count, saving_path, saving_period_iterations = 10000):
         self.env = env
         self.agent = agent
 
@@ -71,7 +71,7 @@ class TrainingIterations:
 
     def run(self):
         
-        log = TrainingLog(self.saving_path + "result/result.log", self.iterations_count)
+        log = TrainingLog(self.saving_path + "result/result.log", self.iterations_count, True)
         new_best = False
 
         for iteration in range(self.iterations_count):

@@ -3,7 +3,7 @@ import time
 
 class TrainingLog:
 
-    def __init__(self, file_name, episodes_count, episode_skip_log = 10):
+    def __init__(self, file_name, episodes_count, episode_skip_log = 10, iterations_skip_mode = False):
 
         self.iterations         = 0
         self.episodes           = 0
@@ -11,6 +11,8 @@ class TrainingLog:
         self.episode_iterations_sum = 0.0
         self.total_score        = 0.0
         self.episodes_count     = episodes_count
+
+        self.iterations_skip_mode = iterations_skip_mode
 
         self.episode_score_sum_filtered = 0.0
 
@@ -77,8 +79,14 @@ class TrainingLog:
             self.episode_score_sum = 0
             self.episode_iterations_sum = 0
             
+            log_result = False
+            if self.iterations_skip_mode
+                if self.iterations%self.episode_skip_log == 0:
+                    log_result = True
+                elif self.episodes%self.episode_skip_log == 0:
+                    log_result = True
 
-            if self.episodes%self.episode_skip_log == 0:
+            if log_result:
                 print(log_str)
 
                 if self.file_name != None:

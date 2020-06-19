@@ -30,7 +30,7 @@ agent = agents.AgentPPO(env, model, config)
 max_iterations = 10*(10**6)
 
 
-trainig = TrainingIterations(env, agent, max_iterations, path, 500)
+trainig = TrainingIterations(env, agent, max_iterations, path, 10000)
 trainig.run()
 
 '''
