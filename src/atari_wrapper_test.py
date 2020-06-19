@@ -14,9 +14,12 @@ env = gym.make("PongNoFrameskip-v4")
 #env = gym.make("MsPacmanNoFrameskip-v4")
 env = atari_wrapper(env)
 
-env.reset()
+obs = env.reset()
 
 agent = agents.AgentRandom(env)
+
+print(obs)
+print(obs.shape)
 
 
 while True:
