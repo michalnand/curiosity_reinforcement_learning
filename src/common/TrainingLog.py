@@ -3,14 +3,13 @@ import time
 
 class TrainingLog:
 
-    def __init__(self, file_name, episodes_count, episode_skip_log = 10, iterations_skip_mode = False):
+    def __init__(self, file_name, episode_skip_log = 10, iterations_skip_mode = False):
 
         self.iterations         = 0
         self.episodes           = 0
         self.episode_score_sum = 0.0
         self.episode_iterations_sum = 0.0
         self.total_score        = 0.0
-        self.episodes_count     = episodes_count
 
         self.iterations_skip_mode = iterations_skip_mode
 
@@ -57,14 +56,6 @@ class TrainingLog:
                     self.episode_score_best = self.episode_score_sum_filtered
                     self.is_best = True
 
-
-                tmp = self.episodes_count//10
-                if self.episodes%tmp == 0:
-                    eta_time = (self.episodes_count - self.episodes)*self.episode_time_filtered
-                    print("ETA time ", round(eta_time, 1), "[s]")
-                    print("ETA time ", round(eta_time/3600, 1), "[hours]")
-                    print("\n\n")
-
             dp = 3
 
             log_str = ""
@@ -83,7 +74,8 @@ class TrainingLog:
             if self.iterations_skip_mode:
                 if self.iterations%self.episode_skip_log == 0:
                     log_result = True
-                elif self.episodes%self.episode_skip_log == 0:
+            else:
+                if self.episodes%self.episode_skip_log == 0:
                     log_result = True
 
             if log_result:

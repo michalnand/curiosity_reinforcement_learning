@@ -13,7 +13,7 @@ class TrainingEpisodes:
 
     def run(self):
         
-        log = TrainingLog(self.saving_path + "result/result.log", self.episodes_count)
+        log = TrainingLog(self.saving_path + "result/result.log", self.saving_period_episode)
         new_best = False
 
         for episode in range(self.episodes_count):
