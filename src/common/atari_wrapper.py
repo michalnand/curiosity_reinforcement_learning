@@ -123,6 +123,20 @@ class ClipRewardEnv(gym.RewardWrapper):
         return obs, reward, done, info
 
 
+class LifeLostEnv(gym.RewardWrapper):
+    def __init__(self, env):
+        gym.RewardWrapper.__init__(self, env)
+
+    def step(self, action):
+        obs, reward, done, info = self.env.step(action)
+
+        if done:
+            reward = -1.0
+
+        return obs, reward, done, info
+
+
+
 
 class EpisodicLifeEnv(gym.Wrapper):
     def __init__(self, env):
@@ -219,6 +233,7 @@ def atari_wrapper(env, width = 96, height = 96, frame_stacking = 4):
     env = SkipEnv(env, 4)
     env = ClipRewardEnv(env)
     #env = EpisodicLifeEnv(env)
+    env = LifeLostEnv(env)
     env = ResizeFrameEnv(env)
     env = FrameStack(env)
     env = MakeTensorEnv(env)
