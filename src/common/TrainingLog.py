@@ -80,7 +80,7 @@ class TrainingLog:
             self.episode_iterations_sum = 0
             
             log_result = False
-            if self.iterations_skip_mode
+            if self.iterations_skip_mode:
                 if self.iterations%self.episode_skip_log == 0:
                     log_result = True
                 elif self.episodes%self.episode_skip_log == 0:
