@@ -23,6 +23,8 @@ while True:
     reward, done = agent.main()
     env.render()
 
+    if reward != 0:
+        print("reward = ", reward)
     if done:
-        print("DONE ", reward)
+        print("DONE \n\n")
     time.sleep(0.01)

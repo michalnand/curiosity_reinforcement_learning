@@ -11,8 +11,8 @@ from common.Training import *
 
 path = "models/atari_ppo/"
 
-#env = gym.make("PongNoFrameskip-v4")
-env = gym.make("BreakoutNoFrameskip-v4")
+env = gym.make("PongNoFrameskip-v4")
+#env = gym.make("BreakoutNoFrameskip-v4")
 #env = gym.make("MsPacmanNoFrameskip-v4")
 
 env = common.atari_wrapper.Create(env)

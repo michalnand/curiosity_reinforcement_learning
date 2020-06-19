@@ -8,10 +8,9 @@ class TrainingLog:
         self.iterations         = 0
         self.episodes           = 0
         self.episode_score_sum = 0.0
-        self.episode_iterations_sum = 0.0
-        self.episode_score_sum_         = self.episode_score_sum
-        self.episode_iterations_sum_    = self.episode_iterations_sum
-
+        self.episode_iterations= 0.0
+        self.episode_iterations_filtered= 0.0
+      
         self.total_score        = 0.0
 
 
@@ -38,7 +37,7 @@ class TrainingLog:
 
         self.total_score+= reward
         self.episode_score_sum+= reward
-        self.episode_iterations_sum+= 1
+        self.episode_iterations+= 1
 
         self.iterations+= 1
 
@@ -48,6 +47,7 @@ class TrainingLog:
             self.episodes+= 1
 
             k = 0.1
+            self.episode_iterations_filtered = (1.0 - k)*self.episode_iterations_filtered + k*self.episode_iterations
             self.episode_score_sum_filtered = (1.0 - k)*self.episode_score_sum_filtered + k*self.episode_score_sum
             
             self.episode_time_prev = self.episode_time_now
@@ -60,11 +60,8 @@ class TrainingLog:
                     self.is_best = True
 
 
-            self.episode_score_sum_         = self.episode_score_sum
-            self.episode_iterations_sum_    = self.episode_iterations_sum
-
             self.episode_score_sum = 0
-            self.episode_iterations_sum = 0
+            self.episode_iterations = 0
         
         if self.iterations_skip_mode:
             tmp = self.iterations
@@ -76,9 +73,8 @@ class TrainingLog:
             log_str = ""
             log_str+= str(self.iterations) + " "
             log_str+= str(self.episodes) + " "
-            log_str+= str(round(self.episode_iterations_sum_, dp)) + " "
+            log_str+= str(round(self.episode_iterations_filtered, dp)) + " "
             log_str+= str(round(self.total_score, dp)) + " "
-            log_str+= str(round(self.episode_score_sum_, dp)) + " "
             log_str+= str(round(self.episode_score_sum_filtered, dp)) + " "
             log_str+= str(round(self.episode_time_filtered, 4)) + " "
 
