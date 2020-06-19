@@ -1,7 +1,7 @@
 import agents
 import time
 import gym
-import common.atari_wrapper
+from common.atari_wrapper import *
 
 
 from common.TrainingLog import *
@@ -12,7 +12,7 @@ log = TrainingLog(path + "result/result.log", episode_skip_log = 100)
 env = gym.make("PongNoFrameskip-v4")
 #env = gym.make("BreakoutNoFrameskip-v4")
 #env = gym.make("MsPacmanNoFrameskip-v4")
-env = common.atari_wrapper.Create(env)
+env = atari_wrapper(env)
 
 env.reset()
 
@@ -27,4 +27,5 @@ while True:
         print("reward = ", reward)
     if done:
         print("DONE \n\n")
-    time.sleep(0.01)
+    
+    #time.sleep(0.01)

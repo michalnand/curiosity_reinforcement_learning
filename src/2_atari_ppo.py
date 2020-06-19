@@ -2,7 +2,7 @@ import agents
 import time
 import gym
 import numpy
-import common.atari_wrapper
+from common.atari_wrapper import 8
 
 import models.atari_ppo.src.model
 import models.atari_ppo.src.config
@@ -15,7 +15,7 @@ env = gym.make("PongNoFrameskip-v4")
 #env = gym.make("BreakoutNoFrameskip-v4")
 #env = gym.make("MsPacmanNoFrameskip-v4")
 
-env = common.atari_wrapper.Create(env)
+env = atari_wrapper(env)
 
 obs             = env.observation_space
 actions_count   = env.action_space.n
