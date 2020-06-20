@@ -158,11 +158,16 @@ class AgentPPO():
             loss1 = ratio*advantage
             loss2 = torch.clamp(ratio, 1.0 - self.eps_clip, 1.0 + self.eps_clip)*advantage
                 
-            loss = -torch.min(loss1, loss2)
-            loss+= ((rewards_t - state_values)**2) 
-            loss+= -self.entropy_beta*dist_entropy
+            loss_policy = -torch.min(loss1, loss2)
+            loss_policy = loss_policy.mean()
 
-            loss = loss.mean()
+            loss_value = ((rewards_t - state_values)**2) 
+            loss_value = loss_value.mean()
+            
+            loss_entropy = -self.entropy_beta*dist_entropy
+            loss_entropy = loss_entropy.mean()
+
+            loss = loss_policy + loss_value + loss_entropy
 
             #take gradient step
             self.optimizer.zero_grad()

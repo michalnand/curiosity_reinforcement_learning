@@ -1,0 +1,2 @@
+python3 2_atari_ppo.py
+python3 4_atari_pacman_ppo.py
