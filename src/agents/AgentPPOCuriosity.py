@@ -162,7 +162,6 @@ class AgentPPOCuriosity():
             curiosity = self.curiosity_module.eval(states_t, actions_t, states_next_t)
 
 
-
             rewards_t = rewards_t + self.curiosity_scale*curiosity
 
             #evaluate policy and value:

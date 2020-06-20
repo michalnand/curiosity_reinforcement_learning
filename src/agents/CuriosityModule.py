@@ -62,7 +62,8 @@ class CuriosityModule:
 
         curiosity = curiosity.view(curiosity.size(0), -1).mean(dim = 1)
         
-        curiosity = curiosity.to("cpu").detach().numpy()
+        #curiosity = curiosity.to("cpu").detach().numpy()
+        curiosity = curiosity.detach()
 
         return curiosity
 
