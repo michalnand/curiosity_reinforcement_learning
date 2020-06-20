@@ -4,16 +4,14 @@ import gym
 import numpy
 from common.atari_wrapper import *
 
-import models.atari_ppo.src.model
-import models.atari_ppo.src.config
+import models.atari_pacman_ppo.src.model
+import models.atari_pacman_ppo.src.config
 
 from common.Training import *
 
-path = "models/atari_ppo/"
+path = "models/atari_pacman_ppo/"
 
-env = gym.make("PongNoFrameskip-v4")
-#env = gym.make("BreakoutNoFrameskip-v4")
-#env = gym.make("MsPacmanNoFrameskip-v4")
+env = gym.make("MsPacmanNoFrameskip-v4")
 
 env = atari_wrapper(env)
 
@@ -21,8 +19,8 @@ obs             = env.observation_space
 actions_count   = env.action_space.n
 
 
-model  = models.atari_ppo.src.model
-config = models.atari_ppo.src.config.Config()
+model  = models.atari_pacman_ppo.src.model
+config = models.atari_pacman_ppo.src.config.Config()
  
 agent = agents.AgentPPO(env, model, config)
 
@@ -30,10 +28,10 @@ agent = agents.AgentPPO(env, model, config)
 max_iterations = 10*(10**6)
 
 
-#trainig = TrainingIterations(env, agent, max_iterations, path, 1000)
-#trainig.run()
+trainig = TrainingIterations(env, agent, max_iterations, path, 1000)
+trainig.run()
 
-
+'''
 agent.load(path)
 agent.disable_training()
 agent.iterations = 0
@@ -41,3 +39,4 @@ while True:
     agent.main()
     env.render()
     time.sleep(0.01)
+'''
