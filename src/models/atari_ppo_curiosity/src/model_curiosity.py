@@ -59,6 +59,11 @@ class Model(torch.nn.Module):
                                             nn.Linear(hidden_count, 1)
         )
 
+        self.conv0.to(self.device)
+        self.conv1.to(self.device)
+        self.deconv0.to(self.device)
+        self.reward_model.to(self.device)
+
                                     
 
     def forward(self, state, action):
