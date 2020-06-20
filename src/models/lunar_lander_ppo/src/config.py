@@ -7,10 +7,10 @@ class Config():
         self.entropy_beta       = 0.01
 
         self.buffer_size        = 2048
-        self.batch_size         = 256
+        self.batch_size         = 64 
         self.training_epochs    = 4 
 
-        self.learning_rate  = 0.0005
+        self.learning_rate  = 0.00025
         
 
 
