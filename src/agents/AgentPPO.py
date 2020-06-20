@@ -6,11 +6,7 @@ import torch
 
 class Buffer:
     def __init__(self):
-        self.states         = []
-        self.actions        = []
-        self.logprobs       = []
-        self.rewards        = []
-        self.dones          = []
+        self.clear()
 
     def add(self, state, action, logprobs, reward, done):
         self.states.append(state)
@@ -21,11 +17,32 @@ class Buffer:
 
     
     def clear(self):
-        del self.states[:]
-        del self.actions[:]
-        del self.logprobs[:]
-        del self.rewards[:]
-        del self.dones[:]
+        self.states         = []
+        self.actions        = []
+        self.logprobs       = []
+        self.rewards        = []
+        self.dones          = []
+
+    def size(self):
+        return len(self.states)
+
+    def sample(self, batch_size):
+        states         = []
+        actions        = []
+        logprobs       = []
+        rewards        = []
+        dones          = []
+
+        for i in range(batch_size):
+            idx = numpy.random.randint(self.size())
+
+            states.append(self.states[idx])
+            actions.append(self.actions[idx])
+            logprobs.append(self.logprobs[idx])
+            rewards.append(self.rewards[idx])
+            dones.append(self.dones[idx])
+
+        return states, actions, logprobs, rewards, dones
 
 
 class AgentPPO():
@@ -35,9 +52,13 @@ class AgentPPO():
         self.gamma          = config.gamma
         self.eps_clip       = config.eps_clip
         self.entropy_beta   = config.entropy_beta
-        self.update_iterations = config.update_iterations
+        
+        
+        self.buffer_size        = config.buffer_size
+        self.batch_size         = config.batch_size 
         self.training_epochs    = config.training_epochs
        
+
         self.state_shape = self.env.observation_space.shape
         self.actions_count     = self.env.action_space.n
 
@@ -76,7 +97,7 @@ class AgentPPO():
 
             self.buffer.add(state_t, action, logprobs, reward, done)
 
-            if self.iterations % self.update_iterations == 0:
+            if self.buffer.size() >= self.buffer_size:
                 self._train()
                 self.buffer.clear()
         
@@ -100,31 +121,45 @@ class AgentPPO():
         rewards = self._calc_rewards(self.buffer.rewards, self.buffer.dones)
 
         #normalise rewards
-        rewards = torch.tensor(rewards).to(self.model.device)
         rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-5)
-        
-        #create tensors 
-        states_t    = torch.stack(self.buffer.states).to(self.model.device).detach()
-        actions_t   = torch.stack(self.buffer.actions).to(self.model.device).detach()
-        logprobs_t  = torch.stack(self.buffer.logprobs).to(self.model.device).detach()
-      
 
-        for epoch in range(self.training_epochs):
+        self.buffer.rewards = rewards
+
+
+        n_batch = (self.training_epochs*self.buffer_size)//self.batch_size
+        for batch in range(n_batch):
+            
+            states_s, actions_s, logprobs_s, rewards_s, dones_s = self.buffer.sample(self.batch_size)
+
+            #create tensors 
+            states_t    = torch.stack(states_s).to(self.model.device).detach()
+            actions_t   = torch.stack(actions_s).to(self.model.device).detach()
+            logprobs_t  = torch.stack(logprobs_s).to(self.model.device).detach()
+            rewards_t   = torch.tensor(rewards_s).to(self.model.device).detach()
+            
+            '''
+
+            states_t    = torch.stack(self.buffer.states).to(self.model.device).detach()
+            actions_t   = torch.stack(self.buffer.actions).to(self.model.device).detach()
+            logprobs_t  = torch.stack(self.buffer.logprobs).to(self.model.device).detach()
+            rewards_t   = torch.tensor(self.buffer.rewards).to(self.model.device).detach()
+            '''
 
             #evaluate policy and value:
             logprobs, state_values, dist_entropy = self._evaluate(states_t, actions_t)
+
                 
             #compute ratio (pi_theta / pi_theta__old):
             ratio = torch.exp(logprobs - logprobs_t.detach())
-                    
+            
             #compute loss
-            advantage = rewards - state_values.detach()
+            advantage = rewards_t - state_values.detach()
             
             loss1 = ratio*advantage
             loss2 = torch.clamp(ratio, 1.0 - self.eps_clip, 1.0 + self.eps_clip)*advantage
                 
             loss = -torch.min(loss1, loss2)
-            loss+= ((rewards - state_values)**2) 
+            loss+= ((rewards_t - state_values)**2) 
             loss+= -self.entropy_beta*dist_entropy
 
             loss = loss.mean()
