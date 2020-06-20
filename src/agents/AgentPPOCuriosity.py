@@ -161,6 +161,8 @@ class AgentPPOCuriosity():
             states_next_t = torch.cat((states_t[1:], states_t[-1].unsqueeze(0)), dim=0)
             curiosity = self.curiosity_module.eval(states_t, actions_t, states_next_t)
 
+
+
             rewards_t = rewards_t + self.curiosity_scale*curiosity
 
             #evaluate policy and value:
