@@ -67,10 +67,11 @@ class Model(torch.nn.Module):
                                     
 
     def forward(self, state, action):
-        action_ = action.unsqueeze(1).unsqueeze(1).transpose(3, 1).repeat((1, 1, self.input_shape[1], self.input_shape[2]))
-        action_.to(self.device)
-
+        action_ = action.unsqueeze(1).unsqueeze(1).transpose(3, 1).repeat((1, 1, self.input_shape[1], self.input_shape[2])).to(self.device)
+        
+        print(state.device, action_.device)
         model_input      = torch.cat([state, action_], dim = 1)
+
         conv0_output     = self.conv0(model_input)
         conv1_output     = self.conv1(conv0_output)
 
