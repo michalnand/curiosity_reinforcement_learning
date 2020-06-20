@@ -9,9 +9,9 @@ from common.TrainingLog import *
 path = "models/atari_ppo/"
 log = TrainingLog(path + "result/result.log", episode_skip_log = 100)
 
-env = gym.make("PongNoFrameskip-v4")
+#env = gym.make("PongNoFrameskip-v4")
 #env = gym.make("BreakoutNoFrameskip-v4")
-#env = gym.make("MsPacmanNoFrameskip-v4")
+env = gym.make("MsPacmanNoFrameskip-v4")
 env = atari_wrapper(env)
 
 obs = env.reset()
@@ -31,4 +31,4 @@ while True:
     if done:
         print("DONE \n\n")
     
-    #time.sleep(0.01)
+    time.sleep(0.01)
