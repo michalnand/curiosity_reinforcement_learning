@@ -4,8 +4,10 @@ import torch
 from torch.distributions import Categorical
 
 class AgentA2C():
-    def __init__(self, envs, model, config):
+    def __init__(self, envs, Model, Config):
         self.envs = envs
+
+        config = Config.Config()
 
         self.envs_count = len(self.envs)
  
@@ -13,17 +15,17 @@ class AgentA2C():
         self.entropy_beta   = config.entropy_beta
         self.batch_size     = config.batch_size
        
-        self.observation_shape = self.envs[0].observation_space.shape
+        self.state_shape = self.envs[0].observation_space.shape
         self.actions_count     = self.envs[0].action_space.n
 
         
-        self.model          = model.Model(self.observation_shape, self.actions_count)
+        self.model          = Model.Model(self.state_shape, self.actions_count)
         self.optimizer      = torch.optim.Adam(self.model.parameters(), lr= config.learning_rate)
 
-        self.observations = []
+        self.states = []
 
         for env in self.envs:
-            self.observations.append(env.reset())
+            self.states.append(env.reset())
 
         self.enable_training()
 
@@ -49,14 +51,14 @@ class AgentA2C():
 
         
     def process_env(self, env_id = 0):
-        observation_t   = torch.tensor(self.observations[env_id], dtype=torch.float32).detach().to(self.model.device).unsqueeze(0)
-        logits, value   = self.model.forward(observation_t)
+        state_t   = torch.tensor(self.states[env_id], dtype=torch.float32).detach().to(self.model.device).unsqueeze(0)
+        logits, value   = self.model.forward(state_t)
 
         action_probs_t        = torch.nn.functional.softmax(logits.squeeze(0), dim = 0)
         action_distribution_t = torch.distributions.Categorical(action_probs_t)
         action_t              = action_distribution_t.sample()
             
-        self.observations[env_id], reward, done, _ = self.envs[env_id].step(action_t.item())
+        self.states[env_id], reward, done, _ = self.envs[env_id].step(action_t.item())
         
 
         if self.enabled_training:

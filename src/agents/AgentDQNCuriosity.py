@@ -1,6 +1,6 @@
 import numpy
 import torch
-from .experience_replay import *
+from .ExperienceBuffer import *
 
 from .CuriosityModule import *
 

@@ -2,12 +2,13 @@ import numpy
 import torch
 
 from torch.distributions import Categorical
-
 from .CuriosityModule import *
 
 class AgentA2CCuriosity():
-    def __init__(self, envs, model_a2c, model_curiosity, config):
+    def __init__(self, envs, Model, ModelCuriosity, Config):
         self.envs = envs
+
+        config = Config.Config()
 
         self.envs_count = len(self.envs)
  
@@ -15,19 +16,21 @@ class AgentA2CCuriosity():
         self.entropy_beta   = config.entropy_beta
         self.batch_size     = config.batch_size
        
-        self.observation_shape = self.envs[0].observation_space.shape
+        self.state_shape = self.envs[0].observation_space.shape
         self.actions_count     = self.envs[0].action_space.n
 
         
-        self.model_a2c          = model_a2c.Model(self.observation_shape, self.actions_count)
-        self.optimizer_a2c      = torch.optim.Adam(self.model_a2c.parameters(), lr= config.learning_rate)
+        self.model          = Model.Model(self.state_shape, self.actions_count)
+        self.optimizer      = torch.optim.Adam(self.model.parameters(), lr= config.learning_rate)
 
-        self.curiosity_module = CuriosityModule(model_curiosity, self.observation_shape, self.actions_count, config.curiosity_learning_rate)
+        self.curiosity_update_steps = config.curiosity_update_steps
+        self.curiosity_beta = config.curiosity_beta
+        self.curiosity_module = CuriosityModule(ModelCuriosity, self.state_shape, self.actions_count, config.curiosity_learning_rate, config.curiosity_buffer_size)
 
-        self.observations = []
+        self.states = []
 
         for env in self.envs:
-            self.observations.append(env.reset())
+            self.states.append(env.reset())
 
         self.enable_training()
 
@@ -43,53 +46,54 @@ class AgentA2CCuriosity():
 
 
     def _init_buffer(self):
-        self.logits_b           = torch.zeros((self.envs_count, self.batch_size, self.actions_count)).to(self.model_a2c.device)
-        self.values_b           = torch.zeros((self.envs_count, self.batch_size, 1)).to(self.model_a2c.device)
+        self.logits_b           = torch.zeros((self.envs_count, self.batch_size, self.actions_count)).to(self.model.device)
+        self.values_b           = torch.zeros((self.envs_count, self.batch_size, 1)).to(self.model.device)
         self.action_b           = torch.zeros((self.envs_count, self.batch_size), dtype=int)
         self.rewards_b          = numpy.zeros((self.envs_count, self.batch_size))
         self.done_b             = numpy.zeros((self.envs_count, self.batch_size), dtype=bool)
 
-        self.state_b            = numpy.zeros((self.envs_count, self.batch_size) + self.observation_shape)
-        self.state_next_b       = numpy.zeros((self.envs_count, self.batch_size) + self.observation_shape)
-        
+        self.state_b            = torch.zeros((self.envs_count, self.batch_size, ) + self.state_shape).to(self.model.device)
+        self.state_next_b            = torch.zeros((self.envs_count, self.batch_size, ) + self.state_shape).to(self.model.device)
 
         self.idx = 0
 
         
     def process_env(self, env_id = 0):
-        observation_t   = torch.tensor(self.observations[env_id], dtype=torch.float32).detach().to(self.model_a2c.device).unsqueeze(0)
-        logits, value   = self.model_a2c.forward(observation_t)
+        state_t   = torch.tensor(self.states[env_id], dtype=torch.float32).detach().to(self.model.device).unsqueeze(0)
+
+        state_ = self.states[env_id].copy()
+
+        logits, value   = self.model.forward(state_t)
 
         action_probs_t        = torch.nn.functional.softmax(logits.squeeze(0), dim = 0)
         action_distribution_t = torch.distributions.Categorical(action_probs_t)
         action_t              = action_distribution_t.sample()
             
-        self.observations[env_id], reward, done, _ = self.envs[env_id].step(action_t.item())
+        self.states[env_id], reward, done, _ = self.envs[env_id].step(action_t.item())
         
-        round_done = done[0]
-        game_done  = done[1] 
 
         if self.enabled_training:
             self.logits_b[env_id][self.idx]     = logits.squeeze(0)
             self.values_b[env_id][self.idx]     = value.squeeze(0)
             self.action_b[env_id][self.idx]     = action_t.item()
             self.rewards_b[env_id][self.idx]    = reward
-            self.done_b[env_id][self.idx]       = round_done
-            self.state_b[env_id][self.idx]      = self.state_next_b[env_id][self.idx].copy()
-            self.state_next_b[env_id][self.idx] = self.observations[env_id].copy()
+            self.done_b[env_id][self.idx]       = done
 
-        if self.enabled_training:
-            self.curiosity_module.add(self.observations[env_id], action_t.item())
+            self.state_b[env_id][self.idx]      = torch.from_numpy(state_).to(self.model.device)
+            self.state_next_b[env_id][self.idx] = torch.from_numpy(self.states[env_id]).to(self.model.device)
 
-        if game_done:
-            self.envs[env_id].reset()
+            if env_id == 0:
+                self.curiosity_module.add(state_, action_t.item(), reward, done)
 
-        return reward
+        if done:
+            self.states[env_id] = self.envs[env_id].reset()
+
+        return reward, done
         
-    def compute_loss_a2c(self, env_id):
-        target_values_b = self._calc_q_values(self.rewards_b[env_id], self.values_b[env_id].detach().cpu().numpy(), self.done_b[env_id])
+    def compute_loss(self, env_id, curiosity):
+        target_values_b = self._calc_q_values(self.rewards_b[env_id], self.values_b[env_id].detach().cpu().numpy(), self.done_b[env_id], curiosity)
 
-        target_values_b = torch.FloatTensor(target_values_b).to(self.model_a2c.device)
+        target_values_b = torch.FloatTensor(target_values_b).to(self.model.device)
 
         probs     = torch.nn.functional.softmax(self.logits_b[env_id], dim = 1)
         log_probs = torch.nn.functional.log_softmax(self.logits_b[env_id], dim = 1)
@@ -122,32 +126,40 @@ class AgentA2CCuriosity():
         return loss
 
 
+    
     def main(self):
         reward = 0
+        done = False
         for env_id in range(self.envs_count):
-            tmp = self.process_env(env_id)
+            tmp, tmp_done = self.process_env(env_id)
             if env_id == 0:
                 reward = tmp
+                done = tmp_done
 
         if self.enabled_training:
             self.idx+= 1
 
-        '''
-        if self.enabled_training:
+        if self.enabled_training and self.iterations%self.curiosity_update_steps == 0:
             self.curiosity_module.train()
-        '''
+           
         
         if self.idx > self.batch_size-1:   
-            
-            loss_a2c = 0
-            for env_id in range(self.envs_count):
-                #curiosity = self.curiosity_module.eval(torch.from_numpy(self.state_b[env_id]), torch.from_numpy(self.action_b[env_id]), torch.from_numpy(self.state_next_b[env_id]))
-                loss_a2c+= self.compute_loss_a2c(env_id)
 
-            self.optimizer_a2c.zero_grad()
-            loss_a2c.backward()
-            torch.nn.utils.clip_grad_norm_(self.model_a2c.parameters(), 0.1)
-            self.optimizer_a2c.step() 
+            self.rewards_b = (self.rewards_b - self.rewards_b.mean())/self.rewards_b.std()   
+
+            
+            loss = 0
+            for env_id in range(self.envs_count):
+                curiosity, _ = self.curiosity_module.eval(self.state_b[env_id], self.state_next_b[env_id], self.action_b[env_id])
+
+                curiosity = torch.clamp(curiosity*self.curiosity_beta, 0.0, 1.0)
+                loss+= self.compute_loss(env_id, curiosity)
+
+
+            self.optimizer.zero_grad()
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 0.1)
+            self.optimizer.step() 
 
             #clear batch buffer
             self._init_buffer()
@@ -161,7 +173,7 @@ class AgentA2CCuriosity():
 
         self.iterations+= 1
 
-        return reward
+        return reward, done
             
     def save(self, save_path):
         self.model.save(save_path)
@@ -170,7 +182,7 @@ class AgentA2CCuriosity():
         self.model.load(save_path)
     
 
-    def _calc_q_values(self, rewards, critic_value, done):
+    def _calc_q_values(self, rewards, critic_value, done, curiosity):
         size = len(rewards)
         result = numpy.zeros((size, 1))
 
@@ -181,7 +193,7 @@ class AgentA2CCuriosity():
             else:
                 gamma = self.gamma
 
-            q = rewards[n] + gamma*q
+            q = rewards[n] + gamma*q + curiosity[n]
             result[n][0] = q
 
         return result

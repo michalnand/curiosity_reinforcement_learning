@@ -1,35 +1,31 @@
 import numpy
 import torch
-from .experience_replay import *
+from .ExperienceBuffer import *
 
 
 class AgentDQN():
     def __init__(self, env, Model, Config):
         self.env = env
 
-        self.action = 0
-
-        config  = Config()
+        config = Config.Config()
 
         self.batch_size     = config.batch_size
-
         self.exploration    = config.exploration
         self.gamma          = config.gamma
+        self.update_frequency = config.update_frequency
+       
+        self.state_shape    = self.env.observation_space.shape
+        self.actions_count  = self.env.action_space.n
+
+        self.experience_replay = ExperienceBuffer(config.experience_replay_size)
+
+        self.model      = Model.Model(self.state_shape, self.actions_count)
+        self.optimizer  = torch.optim.Adam(self.model.parameters(), lr= config.learning_rate)
+
+        self.state    = env.reset()
 
         self.iterations     = 0
 
-        self.update_frequency = config.update_frequency
-
-       
-        self.observation_shape = self.env.observation_space.shape
-        self.actions_count     = self.env.action_space.n
-
-        self.experience_replay = Buffer(config.experience_replay_size)
-
-        self.model      = Model.Model(self.observation_shape, self.actions_count)
-        self.optimizer  = torch.optim.Adam(self.model.parameters(), lr= config.learning_rate)
-
-        self.observation    = env.reset()
         self.enable_training()
 
     def enable_training(self):
@@ -46,20 +42,20 @@ class AgentDQN():
             epsilon = self.exploration.get_testing()
 
         
-        q_values = self.model.get_q_values(self.observation)
+        q_values = self.model.get_q_values(self.state)
         self.action = self.choose_action_e_greedy(q_values, epsilon)
 
-        observation_new, self.reward, done, self.info = self.env.step(self.action)
+        state_new, self.reward, done, self.info = self.env.step(self.action)
  
         if self.enabled_training:
-            self.experience_replay.add(self.observation, self.action, self.reward, done)
+            self.experience_replay.add(self.state, self.action, self.reward, done)
 
 
         if self.enabled_training and (self.iterations > self.experience_replay.size):
             if self.iterations%self.update_frequency == 0:
                 self.train_model()
 
-        self.observation = observation_new
+        self.state = state_new
             
         if done:
             self.env.reset()
@@ -87,7 +83,7 @@ class AgentDQN():
         self.optimizer.zero_grad()
         loss.backward()
         for param in self.model.parameters():
-            param.grad.data.clamp_(-10.0, 10.0)
+            param.grad.data.clamp_(-1.0, 1.0)
         self.optimizer.step()
 
 
