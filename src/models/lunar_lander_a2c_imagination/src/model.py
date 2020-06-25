@@ -7,34 +7,43 @@ class Model(torch.nn.Module):
         super(Model, self).__init__()
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+        
         self.input_shape    = input_shape
         self.outputs_count  = outputs_count
         
          
-        self.model_features = nn.Sequential(
+        self.features_layers = [ 
                                     nn.Linear(input_shape[0], hidden_count),
-                                    nn.ReLU()                      
-        )
+                                    nn.ReLU(),                      
+                            ]
 
-        self.model_policy = nn.Sequential(
+        self.layers_policy = [
                                 nn.Linear(hidden_count, hidden_count),
                                 nn.ReLU(),   
 
                                 nn.Linear(hidden_count, outputs_count)
-        )
+                            ]
 
-        self.model_critic = nn.Sequential(          
+        self.layers_critic = [          
                                 nn.Linear(hidden_count, hidden_count),
                                 nn.ReLU(),   
 
                                 nn.Linear(hidden_count, 1)
-        )
+                            ]
 
 
-      
+        for i in range(len(self.features_layers)):
+            if hasattr(self.features_layers[i], "weight"):
+                torch.nn.init.xavier_uniform_(self.features_layers[i].weight)
+
+
+        self.model_features = nn.Sequential(*self.features_layers)
         self.model_features.to(self.device)
+
+        self.model_policy = nn.Sequential(*self.layers_policy)
         self.model_policy.to(self.device)
+
+        self.model_critic = nn.Sequential(*self.layers_critic)
         self.model_critic.to(self.device)
 
 

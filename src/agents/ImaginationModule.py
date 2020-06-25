@@ -56,7 +56,8 @@ class ImaginationModule:
 
     def eval_np(self, state, action):
 
-        state_t   = torch.tensor(state, dtype=torch.float32).detach().to(self.model.device).unsqueeze(0)
+        #state_t   = torch.tensor(state, dtype=torch.float32).detach().to(self.model.device).unsqueeze(0)
+        state_t   = state.clone().detach().to(self.model.device).unsqueeze(0)
 
         state_prediction, reward_prediction = self.eval(state_t, action)
 

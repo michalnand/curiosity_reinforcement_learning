@@ -6,7 +6,7 @@ class Config():
         self.eps_clip           = 0.2
         self.entropy_beta       = 0.01
 
-        self.buffer_size        = 2048
+        self.buffer_size        = 1024
         self.batch_size         = 64 
         self.training_epochs    = 4 
 

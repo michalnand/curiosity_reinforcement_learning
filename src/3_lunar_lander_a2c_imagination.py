@@ -14,8 +14,6 @@ from common.Training import *
 
 path = "models/lunar_lander_a2c_imagination/"
 
-
-
 class LunarLanderWrapper(gym.Wrapper):
     def __init__(self, env):
         gym.Wrapper.__init__(self, env)
@@ -25,12 +23,9 @@ class LunarLanderWrapper(gym.Wrapper):
         reward = numpy.clip(reward / 10.0, -1.0, 1.0)
         return obs, reward, done, info
 
-
 env = gym.make("LunarLander-v2")
 env = LunarLanderWrapper(env)
 
-
- 
 agent = agents.AgentA2CImagination(env, Model, ModelEnv, Config)
 
 max_iterations = 100000

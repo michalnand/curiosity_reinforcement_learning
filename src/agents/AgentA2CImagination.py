@@ -5,32 +5,28 @@ from torch.distributions import Categorical
 from .ImaginationModule import *
 
 class AgentA2CImagination():
-    def __init__(self, envs, Model, ModelImagination, Config):
-        self.envs = envs
+    def __init__(self, env, Model, ModelImagination, Config):
+        self.env = env
 
         config = Config.Config()
-
-        self.envs_count = len(self.envs)
  
         self.gamma          = config.gamma
         self.entropy_beta   = config.entropy_beta
+        
         self.batch_size     = config.batch_size
-       
-        self.state_shape = self.envs[0].observation_space.shape
-        self.actions_count     = self.envs[0].action_space.n
+        self.rollouts       = config.rollouts
+
+        self.state_shape = self.env.observation_space.shape
+        self.actions_count     = self.env.action_space.n
 
         
         self.model          = Model.Model(self.state_shape, self.actions_count)
         self.optimizer      = torch.optim.Adam(self.model.parameters(), lr= config.learning_rate)
 
-        self.curiosity_update_steps = config.curiosity_update_steps
-        self.curiosity_beta = config.curiosity_beta
-        self.curiosity_module = ImaginationModule(ModelImagination, self.state_shape, self.actions_count, config.imagination_learning_rate, config.imagination_buffer_size)
+        self.imagination_update_steps = config.imagination_update_steps
+        self.imagination_module = ImaginationModule(ModelImagination, self.state_shape, self.actions_count, config.imagination_learning_rate, config.imagination_buffer_size)
 
-        self.states = []
-
-        for env in self.envs:
-            self.states.append(env.reset())
+        self.state = self.env.reset()
 
         self.enable_training()
 
@@ -46,63 +42,29 @@ class AgentA2CImagination():
 
 
     def _init_buffer(self):
-        self.logits_b           = torch.zeros((self.envs_count, self.batch_size, self.actions_count)).to(self.model.device)
-        self.values_b           = torch.zeros((self.envs_count, self.batch_size, 1)).to(self.model.device)
-        self.action_b           = torch.zeros((self.envs_count, self.batch_size), dtype=int)
-        self.rewards_b          = numpy.zeros((self.envs_count, self.batch_size))
-        self.done_b             = numpy.zeros((self.envs_count, self.batch_size), dtype=bool)
-
-        self.state_b            = torch.zeros((self.envs_count, self.batch_size, ) + self.state_shape).to(self.model.device)
-        self.state_next_b            = torch.zeros((self.envs_count, self.batch_size, ) + self.state_shape).to(self.model.device)
+        self.logits_b           = torch.zeros((self.rollouts, self.batch_size, self.actions_count)).to(self.model.device)
+        self.values_b           = torch.zeros((self.rollouts, self.batch_size, 1)).to(self.model.device)
+        self.action_b           = torch.zeros((self.rollouts, self.batch_size), dtype=int)
+        self.rewards_b          = numpy.zeros((self.rollouts, self.batch_size))
+        self.done_b             = numpy.zeros((self.rollouts, self.batch_size), dtype=bool)
 
         self.idx = 0
 
         
-    def process_env(self, env_id = 0):
-        state_t   = torch.tensor(self.states[env_id], dtype=torch.float32).detach().to(self.model.device).unsqueeze(0)
-
-        state_ = self.states[env_id].copy()
-
-        logits, value   = self.model.forward(state_t)
-
-        action_probs_t        = torch.nn.functional.softmax(logits.squeeze(0), dim = 0)
-        action_distribution_t = torch.distributions.Categorical(action_probs_t)
-        action_t              = action_distribution_t.sample()
-            
-        self.states[env_id], reward, done, _ = self.envs[env_id].step(action_t.item())
         
-
-        if self.enabled_training:
-            self.logits_b[env_id][self.idx]     = logits.squeeze(0)
-            self.values_b[env_id][self.idx]     = value.squeeze(0)
-            self.action_b[env_id][self.idx]     = action_t.item()
-            self.rewards_b[env_id][self.idx]    = reward
-            self.done_b[env_id][self.idx]       = done
-
-            self.state_b[env_id][self.idx]      = torch.from_numpy(state_).to(self.model.device)
-            self.state_next_b[env_id][self.idx] = torch.from_numpy(self.states[env_id]).to(self.model.device)
-
-            if env_id == 0:
-                self.curiosity_module.add(state_, action_t.item(), reward, done)
-
-        if done:
-            self.states[env_id] = self.envs[env_id].reset()
-
-        return reward, done
-        
-    def compute_loss(self, env_id, curiosity):
-        target_values_b = self._calc_q_values(self.rewards_b[env_id], self.values_b[env_id].detach().cpu().numpy(), self.done_b[env_id], curiosity)
+    def compute_loss(self, idx):
+        target_values_b = self._calc_q_values(self.rewards_b[idx], self.values_b[idx].detach().cpu().numpy(), self.done_b[idx])
 
         target_values_b = torch.FloatTensor(target_values_b).to(self.model.device)
 
-        probs     = torch.nn.functional.softmax(self.logits_b[env_id], dim = 1)
-        log_probs = torch.nn.functional.log_softmax(self.logits_b[env_id], dim = 1)
+        probs     = torch.nn.functional.softmax(self.logits_b[idx], dim = 1)
+        log_probs = torch.nn.functional.log_softmax(self.logits_b[idx], dim = 1)
 
         '''
         compute critic loss, as MSE
         L = (T - V(s))^2
         '''
-        loss_value = (target_values_b - self.values_b[env_id])**2
+        loss_value = (target_values_b - self.values_b[idx])**2
         loss_value = loss_value.mean()
 
 
@@ -110,8 +72,8 @@ class AgentA2CImagination():
         compute actor loss 
         L = log(pi(s, a))*(T - V(s)) = log(pi(s, a))*A
         '''
-        advantage   = (target_values_b - self.values_b[env_id]).detach()
-        loss_policy = -log_probs[range(len(log_probs)), self.action_b[env_id]]*advantage
+        advantage   = (target_values_b - self.values_b[idx]).detach()
+        loss_policy = -log_probs[range(len(log_probs)), self.action_b[idx]]*advantage
         loss_policy = loss_policy.mean()
 
         '''
@@ -125,51 +87,72 @@ class AgentA2CImagination():
         loss = loss_value + loss_policy + loss_entropy
         return loss
 
+    def process_imagination(self):
+
+        state_t   = self.imagination_module.get_state(self.rollouts).clone()
+        
+
+        for rollout in range(self.rollouts):
+            
+            state  = state_t[rollout]
+            
+            for n in range(self.batch_size):
+                
+                logits, value   = self.model.forward(state)
+                action, action_t = self._select_action(logits)
+
+                state_, reward = self.imagination_module.eval_np(state, action)
+
+                if n == self.batch_size-1:
+                    done = True
+                else:
+                    done = False
+
+                self.logits_b[rollout][self.idx]     = logits.squeeze(0)
+                self.values_b[rollout][self.idx]     = value.squeeze(0)
+                self.action_b[rollout][self.idx]     = action_t.item()
+                self.rewards_b[rollout][self.idx]    = reward
+                self.done_b[rollout][self.idx]       = done
+
+                state = torch.from_numpy(state_)
+
+        loss = 0
+        for rollout in range(self.rollouts):
+            loss+= self.compute_loss(rollout)
+
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.model.parameters(), 0.1)
+        self.optimizer.step() 
+
+        self._init_buffer()
 
     
     def main(self):
-        reward = 0
-        done = False
-        for env_id in range(self.envs_count):
-            tmp, tmp_done = self.process_env(env_id)
-            if env_id == 0:
-                reward = tmp
-                done = tmp_done
+
+        state_t   = torch.tensor(self.state, dtype=torch.float32).detach().to(self.model.device).unsqueeze(0)
+    
+        logits, value   = self.model.forward(state_t)
+        action, _ = self._select_action(logits)
+
+        state_, reward, done, _ = self.env.step(action)
 
         if self.enabled_training:
-            self.idx+= 1
+            self.imagination_module.add(self.state, action, reward)
 
-        if self.enabled_training and self.iterations%self.curiosity_update_steps == 0:
-            self.curiosity_module.train()
-           
-        
-        if self.idx > self.batch_size-1:   
+            if self.iterations%self.imagination_update_steps == 0:
+                loss = self.imagination_module.train()
+                print("imagination loss = ", loss)
 
-            self.rewards_b = (self.rewards_b - self.rewards_b.mean())/self.rewards_b.std()   
+            if self.iterations > 2*4096:
+                self.process_imagination()
 
-            
-            loss = 0
-            for env_id in range(self.envs_count):
-                curiosity, _ = self.curiosity_module.eval(self.state_b[env_id], self.state_next_b[env_id], self.action_b[env_id])
-
-                curiosity = torch.clamp(curiosity*self.curiosity_beta, 0.0, 1.0)
-                loss+= self.compute_loss(env_id, curiosity)
-
-
-            self.optimizer.zero_grad()
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 0.1)
-            self.optimizer.step() 
-
-            #clear batch buffer
-            self._init_buffer()
-
-            '''
-            print("loss_value = ", loss_value.detach().cpu().numpy())
-            print("loss_policy = ", loss_policy.detach().cpu().numpy())
-            print("loss_entropy = ", loss_entropy.detach().cpu().numpy())
-            print("\n\n\n")
-            '''
+    
+        if done:
+            self.state = self.env.reset()
+        else:
+            self.state = state_.copy()
 
         self.iterations+= 1
 
@@ -182,7 +165,7 @@ class AgentA2CImagination():
         self.model.load(save_path)
     
 
-    def _calc_q_values(self, rewards, critic_value, done, curiosity):
+    def _calc_q_values(self, rewards, critic_value, done):
         size = len(rewards)
         result = numpy.zeros((size, 1))
 
@@ -193,8 +176,15 @@ class AgentA2CImagination():
             else:
                 gamma = self.gamma
 
-            q = rewards[n] + gamma*q + curiosity[n]
+            q = rewards[n] + gamma*q
             result[n][0] = q
 
         return result
    
+    def _select_action(self, logits):
+        action_probs_t        = torch.nn.functional.softmax(logits.squeeze(0), dim = 0)
+        action_distribution_t = torch.distributions.Categorical(action_probs_t)
+        action_t              = action_distribution_t.sample()
+
+        return action_t.item(), action_t
+            
