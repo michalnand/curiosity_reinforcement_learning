@@ -65,27 +65,33 @@ class PolicyBuffer:
             
 
 
-    def sample(self, env_id, batch_size):
-        states         = []
-        logits         = []
-        values         = []
-        actions        = []
-        rewards        = []
-        dones          = []
-        discounted_rewards = []
+    def sample(self, env_id, batch_size, device):
+       
+        
+        states_b           = torch.zeros((batch_size, ) + self.state_shape).to(self.device)
+        logits_b           = torch.zeros((batch_size, self.actions_count)).to(self.device)
+        values_b           = torch.zeros((batch_size, 1)).to(self.device)
+        actions_b          = torch.zeros((batch_size), dtype=int)
+        rewards_b          = numpy.zeros((batch_size)) 
+        dones_b            = numpy.zeros((batch_size), dtype=bool)
+
+        discounted_rewards_b = torch.zeros((batch_size, 1)).to(self.device)
+        
 
         for i in range(batch_size):
             idx = numpy.random.randint(self.size())
 
-            states.append(self.states_b[env_id][idx])
-            logits.append(self.logits_b[env_id][idx])
-            values.append(self.values_b[env_id][idx])
-            actions.append(self.actions_b[env_id][idx])
-            rewards.append(self.rewards_b[env_id][idx])
-            dones.append(self.dones_b[env_id][idx])
-            discounted_rewards.append(self.discounted_rewards_b[env_id][idx])
+            states_b[i] = self.states_b[env_id][idx].clone()
+            logits_b[i] = self.logits_b[env_id][idx].clone()
+            values_b[i] = self.values_b[env_id][idx].clone()
+            actions_b[i] = self.actions_b[env_id][idx].clone()
+            rewards_b[i] = self.rewards_b[env_id][idx]
+            dones_b[i] = self.dones_b[env_id][idx]
+
+            discounted_rewards_b[i][0] = self.discounted_rewards_b[env_id][idx][0]
 
 
-        return states, logits, values, actions, rewards, dones, discounted_rewards
+
+        return states_b.detach(), logits_b.detach(), values_b.detach(), actions_b, rewards_b, dones_b, discounted_rewards_b.detach()
 
     

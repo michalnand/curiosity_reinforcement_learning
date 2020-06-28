@@ -43,7 +43,7 @@ class AgentA2C():
    
     def process_env(self, env_id = 0):
         state_t   = torch.tensor(self.states[env_id], dtype=torch.float32).detach().to(self.model.device).unsqueeze(0)
-
+        
         logits, value   = self.model.forward(state_t)
 
         action_t = self._get_action(logits)
@@ -141,5 +141,6 @@ class AgentA2C():
 
         #train network, with gradient cliping
         loss = loss_value + loss_policy + loss_entropy
+
         return loss
 

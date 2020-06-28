@@ -10,18 +10,38 @@ import time
 from common.Training import *
 
 path = "models/lunar_lander_ppo/"
-env = gym.make("LunarLander-v2")
 
-obs             = env.observation_space
-actions_count   = env.action_space.n
+
+envs_count = 8
+
+
+class LunarLanderWrapper(gym.Wrapper):
+    def __init__(self, env):
+        gym.Wrapper.__init__(self, env)
+        
+    def step(self, action):
+        obs, reward, done, info = self.env.step(action)
+        reward = numpy.clip(reward / 10.0, -1.0, 1.0)
+        return obs, reward, done, info
+
+
+envs = []
+for i in range(envs_count):
+    env = gym.make("LunarLander-v2")
+    env = LunarLanderWrapper(env)
+    envs.append(env)
+
+
+obs             = envs[0].observation_space
+actions_count   = envs[0].action_space.n
 
 
  
-agent = agents.AgentPPO(env, Model, Config)
+agent = agents.AgentPPO(envs, Model, Config)
 
 max_iterations = 100000
 
-trainig = TrainingIterations(env, agent, max_iterations, path, 1000)
+trainig = TrainingIterations(envs, agent, max_iterations, path, 1000)
 trainig.run()
 
 agent.load(path)

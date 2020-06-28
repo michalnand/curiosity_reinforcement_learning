@@ -23,7 +23,7 @@ set output 'training_score_total.png'
 plot '../src/models/lunar_lander_dqn/result/result.log' using 1:4 title 'DQN'  with lines lw 3 lc 'blue', \
      '../src/models/lunar_lander_a2c/result/result.log' using 1:4 title 'a2c'  with lines lw 3 lc 'green', \
      '../src/models/lunar_lander_a2c_curiosity/result/result.log' using 1:4 title 'a2c + curiosity'  with lines lw 3 lc 'red', \
-     '../src/models/lunar_lander_a2c_imagination/result/result.log' using 1:4 title 'a2c + imagination'  with lines lw 3
+     '../src/models/lunar_lander_ppo/result/result.log' using 1:4 title 'ppo'  with lines lw 3
 
 
 
@@ -34,7 +34,7 @@ set output 'training_score_per_iterations.png'
 plot '../src/models/lunar_lander_dqn/result/result.log' using 1:($4/$1) title 'DQN'  with lines lw 3 lc 'blue', \
      '../src/models/lunar_lander_a2c/result/result.log' using 1:($4/$1) title 'a2c'  with lines lw 3 lc 'green', \
      '../src/models/lunar_lander_a2c_curiosity/result/result.log' using 1:($4/$1) title 'a2c + curiosity'  with lines lw 3 lc 'red', \
-     '../src/models/lunar_lander_a2c_imagination/result/result.log' using 1:($4/$1) title 'a2c + imagination'  with lines lw 3
+     '../src/models/lunar_lander_ppo/result/result.log' using 1:($4/$1) title 'ppo'  with lines lw 3
 
 
 set xlabel "episodes"
@@ -44,4 +44,4 @@ set output 'training_score_per_episode.png'
 plot '../src/models/lunar_lander_dqn/result/result.log' using 2:5 title 'DQN'  with lines lw 3 lc 'blue', \
      '../src/models/lunar_lander_a2c/result/result.log' using 2:5 title 'a2c'  with lines lw 3 lc 'green', \
      '../src/models/lunar_lander_a2c_curiosity/result/result.log' using 2:5 title 'a2c + curiosity'  with lines lw 3 lc 'red', \
-     '../src/models/lunar_lander_a2c_imagination/result/result.log' using 2:5 title 'a2c + imagination'  with lines lw 3
+     '../src/models/lunar_lander_ppo/result/result.log' using 2:5 title 'ppo'  with lines lw 3
