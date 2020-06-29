@@ -1,18 +1,19 @@
+import sys
+sys.path.insert(0, '..')
 import gym
 import numpy
+import time
+
+
 import agents
 
 
-
-import models.lunar_lander_a2c_curiosity.src.model        as Model
-import models.lunar_lander_a2c_curiosity.src.model_env    as ModelEnv
-import models.lunar_lander_a2c_curiosity.src.config       as Config
-
-import time
-
+import models.a2c_curiosity.src.model        as Model
+import models.a2c_curiosity.src.model_env    as ModelEnv
+import models.a2c_curiosity.src.config       as Config
 from common.Training import *
 
-path = "models/lunar_lander_a2c_curiosity/"
+path = "models/a2c_curiosity/"
 
 envs_count = 8
 

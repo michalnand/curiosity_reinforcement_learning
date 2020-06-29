@@ -7,12 +7,13 @@ import time
 
 import agents
 
-
-import models.a2c.src.model        as Model
-import models.a2c.src.config       as Config
+import models.ppo_curiosity.src.model   as Model
+import models.ppo_curiosity.src.model_env    as ModelEnv
+import models.ppo_curiosity.src.config  as Config
 from common.Training import *
 
-path = "models/a2c/"
+path = "models/ppo_curiosity/"
+
 
 envs_count = 8
 
@@ -34,8 +35,12 @@ for i in range(envs_count):
     envs.append(env)
 
 
+obs             = envs[0].observation_space
+actions_count   = envs[0].action_space.n
+
+
  
-agent = agents.AgentA2C(envs, Model, Config)
+agent = agents.AgentPPOCuriosity(envs, Model, ModelEnv, Config)
 
 max_iterations = 100000
 
@@ -49,6 +54,6 @@ agent.disable_training()
 agent.iterations = 0
 while True:
     agent.main()
-    envs[0].render()
+    env.render()
     time.sleep(0.01)
 

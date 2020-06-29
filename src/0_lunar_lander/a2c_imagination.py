@@ -1,18 +1,17 @@
+import sys
+sys.path.insert(0, '..')
 import gym
 import numpy
-import agents
-
-
-
-import models.lunar_lander_a2c_imagination.src.model        as Model
-import models.lunar_lander_a2c_imagination.src.model_env    as ModelEnv
-import models.lunar_lander_a2c_imagination.src.config       as Config
-
 import time
 
+import agents
+
+import models.a2c_imagination.src.model        as Model
+import models.a2c_imagination.src.model_env    as ModelEnv
+import models.a2c_imagination.src.config       as Config
 from common.Training import *
 
-path = "models/lunar_lander_a2c_imagination/"
+path = "models/a2c_imagination/"
 
 class LunarLanderWrapper(gym.Wrapper):
     def __init__(self, env):
@@ -30,8 +29,8 @@ agent = agents.AgentA2CImagination(env, Model, ModelEnv, Config)
 
 max_iterations = 100000
 
-trainig = TrainingIterations(env, agent, max_iterations, path, 100)
-trainig.run()
+#trainig = TrainingIterations(env, agent, max_iterations, path, 100)
+#trainig.run()
 
 agent.load(path)
 

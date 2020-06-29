@@ -1,15 +1,17 @@
+import sys
+sys.path.insert(0, '..')
 import gym
 import numpy
-import agents
-
-import models.lunar_lander_ppo.src.model   as Model
-import models.lunar_lander_ppo.src.config  as Config
-
 import time
 
+
+import agents
+
+import models.ppo.src.model   as Model
+import models.ppo.src.config  as Config
 from common.Training import *
 
-path = "models/lunar_lander_ppo/"
+path = "models/ppo/"
 
 
 envs_count = 8
@@ -41,8 +43,8 @@ agent = agents.AgentPPO(envs, Model, Config)
 
 max_iterations = 100000
 
-trainig = TrainingIterations(envs, agent, max_iterations, path, 1000)
-trainig.run()
+#trainig = TrainingIterations(envs, agent, max_iterations, path, 1000)
+#trainig.run()
 
 agent.load(path)
 
