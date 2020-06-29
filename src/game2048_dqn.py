@@ -4,9 +4,9 @@ import numpy
 import agents
 
 
-import models.game2048_dqn.src.model        as Model
-import models.game2048_dqn.src.model_tiny   as ModelTiny
-import models.game2048_dqn.src.config       as Config
+import models.game2048_dqn.src.model            as Model
+import models.game2048_dqn.src.model_residual   as ModelResidual
+import models.game2048_dqn.src.config           as Config
 
 import time
 
@@ -17,21 +17,30 @@ path = "models/game2048_dqn/"
 class Game2048Wrapper(gym.Wrapper):
     def __init__(self, env, size):
         gym.Wrapper.__init__(self, env)
-        self.size = size
 
-        self.channels = self.size*self.size + 1 + 1
-        self.height   = self.size
-        self.width    = self.size
-
-        self.observation_space.shape = (self.channels, self.height, self.width)
+      
+        self.observation_space.shape = (1, size, size)
         self.score    = 0
         self.max_tile = 0
-        self.stats    = numpy.zeros(self.size*self.size*2)
+        self.max_value = 15
 
     def reset(self):
 
-        #print("score    = ", self.score)
-        #print("max_tile = ", self.max_tile)
+        print("score    = ", self.score)
+        print("max_tile = ", self.max_tile)
+        print("\n")
+
+        '''       
+        print("score    = ", self.score)
+        print("max_tile = ", self.max_tile)
+        for i in range(len(self.stats)):
+            print(2**(i+1), end="\t ")
+        print("\n")
+        for i in range(len(self.stats)):
+            print(self.stats[i], end="\t ")
+        print("\n")
+        '''
+
 
         obs = self.env.reset()
         self.score, self.max_tile = self._update_score(obs)
@@ -41,29 +50,24 @@ class Game2048Wrapper(gym.Wrapper):
         obs, reward, done, info = self.env.step(action)
         self.score, self.max_tile = self._update_score(obs)
 
-        if reward < 1.0:
+        if reward > 1.0:
+            reward = numpy.log2(reward)/self.max_value
+        elif done:
             reward = -1.0
         else:
-            reward = numpy.log2(reward)
-
+            reward = 0.0
+        
         return self._parse_state(obs), reward, done, info 
 
     def _parse_state(self, state):
-
-        state_norm = numpy.log2(numpy.clip(state, 1, 2**self.channels)).astype(int)
-
-
-        state_ = numpy.rollaxis(numpy.eye(self.channels)[state_norm], 2, 0)
-    
-        return state_
+        state_norm = numpy.log2(numpy.clip(state, 1, 2**self.max_value))/self.max_value
+        state_norm = numpy.expand_dims(state_norm, 0)
+        return state_norm
 
     def _update_score(self, obs):
 
         max_tile  = numpy.max(obs)
         sum_tiles = numpy.sum(obs)
-
-        max_tile_idx = int(numpy.log2(max_tile)) - 1
-        self.stats[max_tile_idx]+= 1
 
         return sum_tiles, max_tile
 
@@ -74,12 +78,13 @@ env = Game2048Wrapper(env, 4)
 env.reset()
 
 
+
 agent = agents.AgentDQN(env, Model, Config)
 
-max_iterations = 1000000
+max_iterations = 20000000
 
-#trainig = TrainingIterations(env, agent, max_iterations, path, 1000)
-#trainig.run()
+trainig = TrainingIterations(env, agent, max_iterations, path, 1000)
+trainig.run()
 
 agent.load(path)
 
