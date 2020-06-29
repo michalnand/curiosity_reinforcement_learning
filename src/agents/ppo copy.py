@@ -9,14 +9,14 @@ class Memory:
     def __init__(self):
         self.actions = []
         self.states = []
-        self.logits = []
+        self.logprobs = []
         self.rewards = []
         self.is_terminals = []
     
     def clear_memory(self):
         self.actions = []
         self.states = []
-        self.logits = []
+        self.logprobs = []
         self.rewards = []
         self.is_terminals = []
 
@@ -38,7 +38,8 @@ class ActorCritic(nn.Module):
                 nn.ReLU(),
                 nn.Linear(hidden_count, hidden_count),
                 nn.ReLU(),
-                nn.Linear(hidden_count, action_dim)
+                nn.Linear(hidden_count, action_dim),
+                nn.Softmax(dim=-1)
                 )
         
         # critic
@@ -53,28 +54,27 @@ class ActorCritic(nn.Module):
     def forward(self):
         raise NotImplementedError
         
-    def act(self, state):
+    def act(self, state, memory):
         state = torch.from_numpy(state).float().to(device) 
-        logits = self.action_layer(state)
-        action_probs = torch.nn.functional.softmax(logits, dim = -1)
-
+        action_probs = self.action_layer(state)
         dist = Categorical(action_probs)
         action = dist.sample()
+        
+        memory.states.append(state)
+        memory.actions.append(action)
+        memory.logprobs.append(dist.log_prob(action))
         
         return action.item()
     
     def evaluate(self, state, action):
-        logits = self.action_layer(state)
-        action_probs = torch.nn.functional.softmax(logits, dim = -1)
-
+        action_probs = self.action_layer(state)
         dist = Categorical(action_probs)
         
         action_logprobs = dist.log_prob(action)
         dist_entropy = dist.entropy()
         
         state_value = self.value_layer(state)
-     
-
+        
         return action_logprobs, torch.squeeze(state_value), dist_entropy
         
 class PPO:
@@ -117,6 +117,9 @@ class PPO:
             # Evaluating old actions and values :
             logprobs, state_values, dist_entropy = self.policy.evaluate(old_states, old_actions)
 
+            logprobs = log_probs[range(len(log_probs)), self.buffer.actions_b[env_id]]
+
+            print(logprobs.shape, old_actions.shape)
             
             # Finding the ratio (pi_theta / pi_theta__old):
             ratios = torch.exp(logprobs - old_logprobs.detach())
@@ -189,13 +192,7 @@ def main():
             timestep += 1
             
             # Running policy_old:
-            action = ppo.policy_old.act(state)
-
-            memory.states.append(state)
-            memory.actions.append(action)
-            memory.logits.append(logits)
-        
-
+            action = ppo.policy_old.act(state, memory)
             state, reward, done, _ = env.step(action)
             
             # Saving reward and is_terminal:
