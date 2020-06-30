@@ -43,8 +43,8 @@ agent = agents.AgentPPO(envs, Model, Config)
 
 max_iterations = 100000
 
-#trainig = TrainingIterations(envs, agent, max_iterations, path, 1000)
-#trainig.run()
+trainig = TrainingIterations(envs, agent, max_iterations, path, 1000)
+trainig.run()
 
 agent.load(path)
 

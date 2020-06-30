@@ -8,6 +8,7 @@ class Config():
         self.entropy_beta       = 0.01
 
         self.batch_size         = 64
+        self.buffer_size        = 1024
         self.training_epochs    = 4
         
 
