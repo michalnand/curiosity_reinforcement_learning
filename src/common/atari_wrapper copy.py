@@ -33,8 +33,23 @@ from gym import spaces
 
 from matplotlib import pyplot as plt
 
+#cv2.ocl.setUseOpenCL(False)
+
+class SetDimensions(gym.Wrapper):
+    def __init__(self, env=None, width = 96, height = 96, frame_stacking = 4):
+        super(SetDimensions, self).__init__(env)
+        self.width  = width
+        self.height = height
+        self.frame_stacking = frame_stacking
+
+        self.actions_count   = env.action_space.n
+        self.shape           = (self.frame_stacking, self.height, self.width)
+
+
+
+
 class NoopResetEnv(gym.Wrapper):
-    def __init__(self, env=None, noop_max = 30):
+    def __init__(self, env=None, noop_max=30):
         super(NoopResetEnv, self).__init__(env)
         self.noop_max = noop_max
         assert env.unwrapped.get_action_meanings()[0] == 'NOOP'
@@ -57,6 +72,8 @@ class FireResetEnv(gym.Wrapper):
         obs, _, _, _ = self.env.step(2)
 
         return obs
+
+
 
 class MaxAndSkipEnv(gym.Wrapper):
     def __init__(self, env, skip=4):
@@ -106,49 +123,103 @@ class ClipRewardEnv(gym.RewardWrapper):
         return obs, reward, done, info
 
 
-class ResizeFrameEnv(gym.Wrapper):
-    def __init__(self, env, width = 96, height = 96, frame_stacking = 4):
+class LiveLostReward(gym.Wrapper):
+    def __init__(self, env):
         gym.Wrapper.__init__(self, env)
+        self.round_done = True
+        self.game_done = True
+        self.lives_current = 0
 
-        self.width  = width
-        self.height = height
-        self.frame_stacking = frame_stacking    
-        self.observation_space = spaces.Box(low=0, high=1.0, shape=(self.frame_stacking, self.height, self.width), dtype=float)
     
     def reset(self):
-        obs = self.env.reset()
-
-        self.slices = np.zeros((self.frame_stacking, self.height, self.width))
-       
-        return self._parse_state(obs)
+        if self.game_done:
+            observation = self.env.reset()
+            self.lives_current = self.env.ale.lives()
+            self.round_done = False
+            self.game_done = False
+        else:
+            observation, _, _, _ = self.env.step(0)
+        return observation
 
     def step(self, action):
-        obs, reward, done, info = self.env.step(action)
+        observation, reward, done, info = self.env.step(action)
+        
+        self.game_done = done
 
-        return self._parse_state(obs), reward, done, info
+        lives = self.env.ale.lives()
+        if lives < self.lives_current:
+            self.lives_current = lives
+            reward = -1.0
+            self.game_done = True
+       
 
-    def _parse_state(self, frame):
+        return observation, reward, self.game_done, info
+
+
+
+class ResizeFrameEnv(gym.ObservationWrapper):
+    def __init__(self, env, width = 96, height = 96):
+        gym.ObservationWrapper.__init__(self, env)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(self.height, self.width, 1), dtype=np.uint8)
+        
+    def observation(self, frame):
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
         frame = cv2.resize(frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
+        return frame
+
+
+class FrameStack(gym.Wrapper):
+    def __init__(self, env):
+        gym.Wrapper.__init__(self, env)
+    
+    def reset(self):
+        ob = self.env.reset()
+        self.slices = np.zeros(self.shape)
+        for i in range(0, self.frame_stacking):
+            self.slices[i] = ob
+
+        return self.get_state()
+
+    def step(self, action):
+        ob, reward, done, info = self.env.step(action)
 
         for i in reversed(range(self.frame_stacking-1)):
             self.slices[i+1] = self.slices[i].copy()
         
-        self.slices[0] = np.array(frame).copy()/255.0
+        self.slices[0] = np.array(ob).copy()
+            
+        return self.get_state(), reward, done, info
 
+    def get_state(self):
         return self.slices
 
 
+class MakeTensorEnv(gym.ObservationWrapper):
+    def __init__(self, env):
+        gym.ObservationWrapper.__init__(self, env)
+
+    def observation(self, observation):
+        #swaped = np.moveaxis(observation, 0, 0)
+        #result = np.reshape(swaped, (1, observation.shape[2], self.height, self.width))
+        result = observation/255.0
+        return result
 
 
 
-def AtariWrapper(env, width = 96, height = 96, frame_stacking = 4):
+
+def Create(env, width = 96, height = 96, frame_stacking = 4):
+    env = SetDimensions(env, width, height, frame_stacking)
     env = NoopResetEnv(env)
     env = FireResetEnv(env)
     env = SkipEnv(env, 4)
     env = ClipRewardEnv(env)
-    env = ResizeFrameEnv(env, width, height, frame_stacking)
-    
+    env = LiveLostReward(env)
+    env = ResizeFrameEnv(env)
+    env = FrameStack(env)
+    env = MakeTensorEnv(env)
+
+    env.observation_space.shape = (env.shape[0], env.shape[1], env.shape[2])
+
     return env
     
 
