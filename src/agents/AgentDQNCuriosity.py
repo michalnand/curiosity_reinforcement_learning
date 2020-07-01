@@ -11,7 +11,7 @@ class AgentDQNCuriosity():
 
         self.action = 0
 
-        config = Config()
+        config = Config.Config()
 
         self.batch_size     = config.batch_size
 
@@ -28,12 +28,12 @@ class AgentDQNCuriosity():
         self.observation_shape = self.env.observation_space.shape
         self.actions_count     = self.env.action_space.n
 
-        self.experience_replay = Buffer(config.experience_replay_size)
+        self.experience_replay = ExperienceBuffer(config.experience_replay_size)
 
         self.model_dqn      = ModelDQN.Model(self.observation_shape, self.actions_count)
         self.optimizer_dqn  = torch.optim.Adam(self.model_dqn.parameters(), lr= config.learning_rate)
 
-        self.curiosity_module = CuriosityModule(ModelCuriosity, self.observation_shape, self.actions_count, config.curiosity_learning_rate)
+        self.curiosity_module = CuriosityModule(ModelCuriosity, self.observation_shape, self.actions_count, config.curiosity_learning_rate, config.curiosity_buffer_size)
 
         self.observation    = env.reset()
         self.enable_training()
@@ -58,7 +58,7 @@ class AgentDQNCuriosity():
 
         if self.enabled_training:
             self.experience_replay.add(self.observation, self.action, self.reward, done)
-            self.curiosity_module.add(self.observation, self.action)
+            self.curiosity_module.add(self.observation, self.action, self.reward)
 
         if self.enabled_training and self.iterations%self.update_frequency == 0:
             self.curiosity_module.train()
@@ -82,8 +82,9 @@ class AgentDQNCuriosity():
         state_t, action_t, reward_t, state_next_t, done_t = self.experience_replay.sample(self.batch_size, self.model_dqn.device)            
 
         #compute curiosity
-        curiosity_t  = self.curiosity_module.eval(state_t, action_t, state_next_t)
+        curiosity_t, _  = self.curiosity_module.eval(state_t, state_next_t, action_t)
         curiosity_t  = numpy.clip(self.curiosity_beta*curiosity_t, 0.0, 1.0)   
+
 
         #q values, state now, state next
         q_predicted      = self.model_dqn.forward(state_t)

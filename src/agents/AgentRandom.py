@@ -14,11 +14,12 @@ class AgentRandom:
 
         state, reward, done, info = self.env.step(action)
 
+        '''
         print(state.shape)
         print(state)
         print(reward)
         print("\n\n")
-
+        '''
         if done:
             state = self.env.reset()
 

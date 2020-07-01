@@ -1,18 +1,20 @@
-import agents
-import time
+import sys
+sys.path.insert(0, '..')
 import gym
-from common.atari_wrapper import *
+import numpy
+import time
+
+import agents
+
+import common.atari_wrapper
 
 
-from common.TrainingLog import *
 
-path = "models/atari_ppo/"
-log = TrainingLog(path + "result/result.log", episode_skip_log = 100)
 
 #env = gym.make("PongNoFrameskip-v4")
 #env = gym.make("BreakoutNoFrameskip-v4")
 env = gym.make("MsPacmanNoFrameskip-v4")
-env = atari_wrapper(env)
+env = common.atari_wrapper.Create(env)
 
 obs = env.reset()
 
