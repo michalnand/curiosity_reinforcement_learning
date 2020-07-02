@@ -22,37 +22,39 @@ class Model(torch.nn.Module):
 
         kernels_count = 32
 
-        fc_input_height = input_shape[1]//8 - 2
-        fc_input_width  = input_shape[2]//8 - 2
+        fc_input_height = input_shape[1]//(4*2*2)
+        fc_input_width  = input_shape[2]//(4*2*2)
 
         self.conv0 = nn.Sequential( 
-                                    nn.Conv2d(input_channels + outputs_count, kernels_count, kernel_size=8, stride=8, padding=0),
+                                    nn.Conv2d(input_channels + outputs_count, kernels_count, kernel_size=4, stride=4, padding=1),
                                     nn.ReLU(),
-
-                                    nn.Conv2d(kernels_count, kernels_count, kernel_size=3, stride=1, padding=0),
-                                    nn.ReLU()
+                                    nn.Conv2d(kernels_count, kernels_count, kernel_size=3, stride=1, padding=1),
+                                    nn.ReLU(),
         )
 
-        self.conv1 = nn.Sequential(  
+        self.conv1 = nn.Sequential(
                                     nn.Conv2d(kernels_count, kernels_count, kernel_size=3, stride=1, padding=1),
-                                    nn.ReLU()
+                                    nn.ReLU(),
         )
 
         self.deconv0 = nn.Sequential(
-                                        nn.ConvTranspose2d(kernels_count, kernels_count, kernel_size=3, stride=1, padding=0),
-                                        nn.ReLU(), 
-
-                                        nn.ConvTranspose2d(kernels_count, input_channels, kernel_size=8, stride=8, padding=0),
+                                        nn.ConvTranspose2d(kernels_count, input_channels, kernel_size=4, stride=4, padding=0),
                                     )
 
         self.reward = nn.Sequential(
+                                            nn.Conv2d(kernels_count, kernels_count, kernel_size=3, stride=2, padding=1),
+                                            nn.ReLU(),
+
+                                            nn.Conv2d(kernels_count, kernels_count, kernel_size=3, stride=2, padding=1),
+                                            nn.ReLU(),
+
                                             Flatten(),
                                             nn.Linear(fc_input_height*fc_input_width*kernels_count, 64),
                                             nn.ReLU(),
                                             nn.Linear(64, 1)
         ) 
 
-        self.conv0.to(self.device) 
+        self.conv0.to(self.device)
         self.conv1.to(self.device) 
         self.deconv0.to(self.device) 
         self.reward.to(self.device) 
@@ -69,10 +71,12 @@ class Model(torch.nn.Module):
         conv0_output     = self.conv0(model_input)
         conv1_output     = self.conv1(conv0_output)
 
-        observation_prediction = self.deconv0(conv0_output + conv1_output)
-        reward_prediction      = self.reward(conv1_output)
+        tmp = conv0_output + conv1_output
+
+        observation_prediction = self.deconv0(tmp)
+        reward_prediction      = self.reward(conv0_output)
         
-        return observation_prediction, reward_prediction
+        return observation_prediction + state, reward_prediction
 
     def save(self, path):
         print("saving ", path)
@@ -111,7 +115,7 @@ class Model(torch.nn.Module):
 
 
 if __name__ == "__main__":
-    batch_size = 5
+    batch_size = 8
 
     channels = 4
     height   = 96
@@ -129,4 +133,5 @@ if __name__ == "__main__":
 
     y, r = model.forward(state, action)
 
-    print(y.shape, r.shape)
+    print(y.shape)
+    print(r.shape)

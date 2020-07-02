@@ -49,7 +49,7 @@ class CuriosityModule:
         state_next_prediction_t, reward_prediction_t = self.model.forward(state_t, action_t)
 
         curiosity = ((state_next_t - state_next_prediction_t)**2.0)
-        curiosity = curiosity.view(curiosity.size(0), -1).sum(dim = 1)
+        curiosity = curiosity.view(curiosity.size(0), -1).mean(dim = 1)
         
         curiosity = curiosity.detach()
         reward_prediction_t   = reward_prediction_t[0].detach()

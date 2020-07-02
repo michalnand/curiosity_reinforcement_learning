@@ -7,10 +7,14 @@ import agents
 
 import torch
 
-import models.env_fc_model.model as Model
+from common.atari_wrapper import *
 
-env = gym.make("LunarLander-v2")
+import models.env_conv_model.model as Model
 
+path = "models/pacam_dqn/"
+
+env = gym.make("MsPacmanNoFrameskip-v4")
+env = AtariWrapper(env)
 
 state = env.reset()
 
@@ -22,6 +26,8 @@ cm =  agents.CuriosityModule(Model, state.shape, actions_count, learning_rate = 
 for i in range(100000):
     action = numpy.random.randint(actions_count)
     state_, reward, done, _ = env.step(action)
+
+    reward = numpy.clip(reward/10.0, -1.0, 1.0)
 
 
     cm.add(state, action, reward, done)
