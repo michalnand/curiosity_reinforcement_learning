@@ -139,6 +139,34 @@ class ResizeFrameEnv(gym.Wrapper):
         return self.slices
 
 
+class EpisodicLifeEnv(gym.Wrapper):
+    def __init__(self, env):
+        gym.Wrapper.__init__(self, env)
+        self.lives = 0
+        self.was_real_done  = True
+
+    def _step(self, action):
+        obs, reward, done, info = self.env.step(action)
+        self.was_real_done = done
+        
+        lives = self.env.unwrapped.ale.lives()
+        if lives < self.lives and lives > 0:
+            done    = True
+            reward  = -1.0
+        if lives == 0 and self.inital_lives > 0:
+            reward = -1.0
+
+        self.lives = lives
+        return obs, reward, done, info
+
+    def _reset(self, **kwargs):
+        if self.was_real_done:
+            obs = self.env.reset(**kwargs)
+        else:
+            obs, _, _, _ = self.env.step(0)
+        self.lives = self.env.unwrapped.ale.lives()
+        self.inital_lives = self.env.unwrapped.ale.lives()
+        return obs
 
 
 
@@ -148,6 +176,7 @@ def AtariWrapper(env, width = 96, height = 96, frame_stacking = 4):
     env = SkipEnv(env, 4)
     env = ClipRewardEnv(env)
     env = ResizeFrameEnv(env, width, height, frame_stacking)
+    env = EpisodicLifeEnv(env)
     
     return env
     

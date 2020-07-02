@@ -50,7 +50,17 @@ class Model(torch.nn.Module):
                                             nn.Linear(fc_input_height*fc_input_width*kernels_count, 64),
                                             nn.ReLU(),
                                             nn.Linear(64, 1)
-        )                        
+        ) 
+
+        self.conv0.to(self.device) 
+        self.conv1.to(self.device) 
+        self.deconv0.to(self.device) 
+        self.reward.to(self.device) 
+
+        print(self.conv0)
+        print(self.conv1)
+        print(self.deconv0)  
+        print(self.reward)                      
 
     def forward(self, state, action):
         action_ = action.unsqueeze(1).unsqueeze(1).transpose(3, 1).repeat((1, 1, self.input_shape[1], self.input_shape[2]))

@@ -12,8 +12,8 @@ import common.atari_wrapper
 
 
 #env = gym.make("PongNoFrameskip-v4")
-#env = gym.make("BreakoutNoFrameskip-v4")
-env = gym.make("MsPacmanNoFrameskip-v4")
+env = gym.make("BreakoutNoFrameskip-v4")
+#env = gym.make("MsPacmanNoFrameskip-v4")
 env = common.atari_wrapper.AtariWrapper(env)
 
 obs = env.reset()
