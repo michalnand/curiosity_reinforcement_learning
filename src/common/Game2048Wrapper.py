@@ -11,33 +11,20 @@ class Game2048Wrapper(gym.Wrapper):
         self.max_tile   = 0
         self.max_value  = 15
 
+        self.obs_prev = None
+        self.stats = {}
+        self.stats_norm = {}
+
+        for i in range(self.max_value):
+            self.stats[int(2**(i+1))] = 0
+            self.stats_norm[int(2**(i+1))] = 0
+
     def reset(self):
-        
-        '''
-        print("score    = ", self.score)
-        print("max_tile = ", self.max_tile)
-        print("\n")
-        '''
-
-        '''       
-        print("score    = ", self.score)
-        print("max_tile = ", self.max_tile)
-        for i in range(len(self.stats)):
-            print(2**(i+1), end="\t ")
-        print("\n")
-        for i in range(len(self.stats)):
-            print(self.stats[i], end="\t ")
-        print("\n")
-        '''
-
-
         obs = self.env.reset()
-        self.score, self.max_tile = self._update_score(obs)
         return self._parse_state(obs)
         
     def step(self, action):
-        obs, reward, done, info = self.env.step(action)
-        self.score, self.max_tile = self._update_score(obs)
+        obs, reward, done, info     = self.env.step(action)
 
         if reward > 1.0:
             reward = numpy.log2(reward)/self.max_value
@@ -46,6 +33,10 @@ class Game2048Wrapper(gym.Wrapper):
         else:
             reward = 0.0
         
+        self.score, self.max_tile = self._update_score(obs)
+        self._update_stats()
+       
+
         return self._parse_state(obs), reward, done, info 
 
     def _parse_state(self, state):
@@ -61,3 +52,12 @@ class Game2048Wrapper(gym.Wrapper):
 
         return sum_tiles, max_tile
 
+    def _update_stats(self):
+        sum = 0
+        self.stats[int(self.max_tile)]+= 1
+        for v in self.stats:
+            sum+= self.stats[v]
+        
+        self.stats_norm = {}
+        for v in self.stats:
+            self.stats_norm[v] = round(100.0*self.stats[v]/(sum + 0.0000001), 1)
