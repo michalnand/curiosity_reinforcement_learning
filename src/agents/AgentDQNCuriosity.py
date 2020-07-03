@@ -83,7 +83,7 @@ class AgentDQNCuriosity():
 
         #compute curiosity
         curiosity_t, _  = self.curiosity_module.eval(state_t, state_next_t, action_t)
-        curiosity_t  = numpy.clip(self.curiosity_beta*curiosity_t, 0.0, 1.0)   
+        curiosity_t  = torch.clamp(self.curiosity_beta*curiosity_t, 0.0, 1.0)   
 
 
         #q values, state now, state next

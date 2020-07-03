@@ -35,8 +35,9 @@ max_iterations = 10**6
 trainig = TrainingIterations(envs, agent, max_iterations, path, 1000)
 trainig.run()
 
-agent.load(path)
 
+'''
+agent.load(path)
 
 agent.disable_training()
 agent.iterations = 0
@@ -44,4 +45,4 @@ while True:
     agent.main()
     env.render()
     time.sleep(0.01)
-
+'''

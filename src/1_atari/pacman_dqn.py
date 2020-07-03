@@ -6,15 +6,15 @@ import time
 import gym
 import numpy
 
-import models.pacam_dqn.src.model            as Model
-import models.pacam_dqn.src.config           as Config
+import models.pacman_dqn.src.model            as Model
+import models.pacman_dqn.src.config           as Config
 
 
 from common.Training import *
 from common.atari_wrapper import *
 
 
-path = "models/pacam_dqn/"
+path = "models/pacman_dqn/"
 
 env = gym.make("MsPacmanNoFrameskip-v4")
 env = AtariWrapper(env)
