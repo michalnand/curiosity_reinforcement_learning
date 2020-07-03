@@ -7,7 +7,7 @@ class Config():
 
         self.update_frequency = 16
 
-        self.batch_size     = 32 
+        self.batch_size     = 64 
         self.learning_rate  = 0.0001
 
         self.exploration = common.decay.Exponential(0.999999, 1.0, 0.02, 0.02)
