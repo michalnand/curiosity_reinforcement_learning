@@ -21,3 +21,4 @@ class Config():
         self.curiosity_beta             = 10.0
  
 
+ 
