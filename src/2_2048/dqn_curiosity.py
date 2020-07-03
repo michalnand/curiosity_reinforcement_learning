@@ -13,7 +13,7 @@ import models.dqn_curiosity.src.config           as Config
 
 
 from common.Training import *
-from Game2048Wrapper import *
+from common.Game2048Wrapper import *
 
 path = "models/dqn_curiosity/"
 
@@ -25,7 +25,7 @@ env.reset()
 
 agent = agents.AgentDQNCuriosity(env, Model, ModelEnv, Config)
 
-max_iterations = 20000000
+max_iterations = 20*(10**6)
 
 trainig = TrainingIterations(env, agent, max_iterations, path, 10000)
 trainig.run()
