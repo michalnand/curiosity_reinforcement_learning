@@ -65,7 +65,7 @@ class Model(torch.nn.Module):
         print(self.reward)                      
 
     def forward(self, state, action):
-        action_ = action.unsqueeze(1).unsqueeze(1).transpose(3, 1).repeat((1, 1, self.input_shape[1], self.input_shape[2]))
+        action_ = action.unsqueeze(1).unsqueeze(1).transpose(3, 1).repeat((1, 1, self.input_shape[1], self.input_shape[2])).to(self.device)
 
         model_input      = torch.cat([state, action_], dim = 1)
         conv0_output     = self.conv0(model_input)
@@ -74,7 +74,7 @@ class Model(torch.nn.Module):
         tmp = conv0_output + conv1_output
 
         observation_prediction = self.deconv0(tmp)
-        reward_prediction      = self.reward(conv0_output)
+        reward_prediction      = self.reward(tmp)
         
         return observation_prediction + state, reward_prediction
 

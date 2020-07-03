@@ -23,6 +23,8 @@ for i in range(100000):
     action = numpy.random.randint(actions_count)
     state_, reward, done, _ = env.step(action)
 
+    reward = numpy.clip(reward/10.0, -1.0, 1.0)
+
 
     cm.add(state, action, reward, done)
 
