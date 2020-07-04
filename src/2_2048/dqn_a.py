@@ -26,8 +26,8 @@ agent = agents.AgentDQN(env, Model, Config)
 
 max_iterations = 20*(10**6)
 
-trainig = TrainingIterations(env, agent, max_iterations, path, 10000)
-trainig.run()
+#trainig = TrainingIterations(env, agent, max_iterations, path, 10000)
+#trainig.run()
 
 agent.load(path)
 

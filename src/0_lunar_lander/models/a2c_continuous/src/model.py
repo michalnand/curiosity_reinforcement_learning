@@ -17,12 +17,21 @@ class Model(torch.nn.Module):
                                     nn.ReLU(),                      
                             ]
 
-        self.layers_policy = [
-                                nn.Linear(hidden_count, hidden_count),
-                                nn.ReLU(),   
+        self.layers_mu = [
+                                    nn.Linear(hidden_count, hidden_count),
+                                    nn.ReLU(),   
 
-                                nn.Linear(hidden_count, outputs_count)
-                            ]
+                                    nn.Linear(hidden_count, outputs_count),
+                                    nn.Tanh()
+                                ]
+
+        self.layers_var = [
+                                    nn.Linear(hidden_count, hidden_count),
+                                    nn.ReLU(),   
+
+                                    nn.Linear(hidden_count, outputs_count),
+                                    nn.Softplus()
+                                ]
 
         self.layers_critic = [          
                                 nn.Linear(hidden_count, hidden_count),
@@ -40,42 +49,52 @@ class Model(torch.nn.Module):
         self.model_features = nn.Sequential(*self.features_layers)
         self.model_features.to(self.device)
 
-        self.model_policy = nn.Sequential(*self.layers_policy)
-        self.model_policy.to(self.device)
+        self.model_mu = nn.Sequential(*self.layers_mu)
+        self.model_mu.to(self.device)
+
+        self.model_var = nn.Sequential(*self.layers_var)
+        self.model_var.to(self.device)
 
         self.model_critic = nn.Sequential(*self.layers_critic)
         self.model_critic.to(self.device)
 
 
         print(self.model_features)
-        print(self.model_policy)
+        print(self.model_mu)
+        print(self.model_var)
         print(self.model_critic)
 
 
     def forward(self, state):
         features_output =  self.model_features(state)
 
-        policy_output = self.model_policy(features_output)
-        critic_output = self.model_critic(features_output)
+        mu_output     = self.model_mu(features_output)
+        var_output    = self.model_var(features_output)
+
+        critic_output   = self.model_critic(features_output)
 
       
-        return policy_output, critic_output
+        return mu_output, var_output, critic_output
+ 
     
     def save(self, path):
         print("saving to ", path)
 
         torch.save(self.model_features.state_dict(), path + "trained/model_features.pt")
-        torch.save(self.model_policy.state_dict(), path + "trained/model_policy.pt")
+        torch.save(self.model_mu.state_dict(), path + "trained/model_mu.pt")
+        torch.save(self.model_var.state_dict(), path + "trained/model_var.pt")
         torch.save(self.model_critic.state_dict(), path + "trained/model_critic.pt")
 
     def load(self, path):       
         print("loading from ", path)
 
         self.model_features.load_state_dict(torch.load(path + "trained/model_features.pt", map_location = self.device))
-        self.model_policy.load_state_dict(torch.load(path + "trained/model_policy.pt", map_location = self.device))
+        self.model_mu.load_state_dict(torch.load(path + "trained/model_mu.pt", map_location = self.device))
+        self.model_var.load_state_dict(torch.load(path + "trained/model_var.pt", map_location = self.device))
         self.model_critic.load_state_dict(torch.load(path + "trained/model_critic.pt", map_location = self.device))
     
         self.model_features.eval() 
-        self.model_policy.eval() 
+        self.model_mu.eval()
+        self.model_var.eval() 
         self.model_critic.eval()  
     
