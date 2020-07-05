@@ -36,8 +36,8 @@ class PolicyBufferContinuous:
         self.states_prev_b[env_id][idx] = self.states_b[env_id][idx].clone()
         self.states_b[env_id][idx]      = state.clone()
         
-        self.mu_b[env_id][idx]    = mu
-        self.var_b[env_id][idx]   = var
+        self.mu_b[env_id][idx]    = mu.clone()
+        self.var_b[env_id][idx]   = var.clone()
 
         self.values_b[env_id][idx]    = value
         self.actions_b[env_id][idx]   = action
@@ -102,6 +102,6 @@ class PolicyBufferContinuous:
 
 
 
-        return states_b.detach(), mu_b, var_b, values_b.detach(), actions_b, rewards_b, dones_b, discounted_rewards_b.detach()
+        return states_b.detach(), mu_b.detach(), var_b.detach(), values_b.detach(), actions_b, rewards_b, dones_b, discounted_rewards_b.detach()
 
     

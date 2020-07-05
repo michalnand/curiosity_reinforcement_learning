@@ -14,30 +14,36 @@ class Model(torch.nn.Module):
          
         self.features_layers = [ 
                                     nn.Linear(input_shape[0], hidden_count),
-                                    nn.ReLU(), 
-                                    nn.Linear(hidden_count, hidden_count),
-                                    nn.ReLU(),                        
+                                    nn.ReLU(),                      
                             ]
 
         self.layers_mu = [
-                            nn.Linear(hidden_count, outputs_count),
-                            nn.Tanh()
-        ]
+                                    nn.Linear(hidden_count, hidden_count),
+                                    nn.ReLU(),   
+
+                                    nn.Linear(hidden_count, outputs_count),
+                                    nn.Tanh()
+                                ]
 
         self.layers_var = [
-                            nn.Linear(hidden_count, outputs_count),
-                            nn.Softplus()
-        ]
+                                    nn.Linear(hidden_count, hidden_count),
+                                    nn.ReLU(),   
 
-        self.layers_critic = [     
-                                nn.Linear(input_shape[0], hidden_count),
-                                nn.ReLU(),      
+                                    nn.Linear(hidden_count, outputs_count),
+                                    nn.Softplus()
+                                ]
 
+        self.layers_critic = [          
                                 nn.Linear(hidden_count, hidden_count),
                                 nn.ReLU(),   
 
                                 nn.Linear(hidden_count, 1)
                             ]
+
+
+        for i in range(len(self.features_layers)):
+            if hasattr(self.features_layers[i], "weight"):
+                torch.nn.init.xavier_uniform_(self.features_layers[i].weight)
 
 
         self.model_features = nn.Sequential(*self.features_layers)
@@ -65,7 +71,7 @@ class Model(torch.nn.Module):
         mu_output     = self.model_mu(features_output)
         var_output    = self.model_var(features_output)
 
-        critic_output   = self.model_critic(state)
+        critic_output   = self.model_critic(features_output)
 
       
         return mu_output, var_output, critic_output

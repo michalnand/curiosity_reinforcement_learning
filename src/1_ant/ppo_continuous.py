@@ -4,14 +4,18 @@ import gym
 import numpy
 import time
 
+
 import agents
 
-import models.a2c_imagination.src.model        as Model
-import models.a2c_imagination.src.model_env    as ModelEnv
-import models.a2c_imagination.src.config       as Config
+import models.ppo_continuous.src.model   as Model
+import models.ppo_continuous.src.config  as Config
 from common.Training import *
 
-path = "models/a2c_imagination/"
+path = "models/ppo_continuous/"
+
+
+envs_count = 8
+
 
 class LunarLanderWrapper(gym.Wrapper):
     def __init__(self, env):
@@ -22,15 +26,20 @@ class LunarLanderWrapper(gym.Wrapper):
         reward = numpy.clip(reward / 10.0, -1.0, 1.0)
         return obs, reward, done, info
 
-env = gym.make("LunarLander-v2")
-env = LunarLanderWrapper(env)
 
-agent = agents.AgentA2CImagination(env, Model, ModelEnv, Config)
+envs = []
+for i in range(envs_count):
+    env = gym.make("LunarLanderContinuous-v2")
+    env = LunarLanderWrapper(env)
+    envs.append(env)
+
+ 
+agent = agents.AgentPPOContinuous(envs, Model, Config)
 
 max_iterations = 100000
 
-#trainig = TrainingIterations(env, agent, max_iterations, path, 100)
-#trainig.run()
+trainig = TrainingIterations(envs, agent, max_iterations, path, 1000)
+trainig.run()
 
 agent.load(path)
 
@@ -39,6 +48,6 @@ agent.disable_training()
 agent.iterations = 0
 while True:
     agent.main()
-    envs[0].render()
+    env.render()
     time.sleep(0.01)
 

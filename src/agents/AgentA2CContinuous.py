@@ -69,7 +69,7 @@ class AgentA2CContinuous():
             if env_id == 0:
                 reward = tmp
                 done = tmp_done
-        
+                    
 
         if self.buffer.size() > self.batch_size-1:  
 

@@ -13,11 +13,11 @@ class Model(torch.nn.Module):
         
          
         self.features_layers = [ 
-                                    nn.Linear(input_shape[0], hidden_count),
-                                    nn.ReLU(), 
-                                    nn.Linear(hidden_count, hidden_count),
-                                    nn.ReLU(),                        
-                            ]
+                                nn.Linear(input_shape[0], hidden_count),
+                                nn.ReLU(), 
+                                nn.Linear(hidden_count, hidden_count),
+                                nn.ReLU(),                      
+        ]
 
         self.layers_mu = [
                             nn.Linear(hidden_count, outputs_count),
@@ -29,12 +29,11 @@ class Model(torch.nn.Module):
                             nn.Softplus()
         ]
 
-        self.layers_critic = [     
+        self.layers_critic = [          
                                 nn.Linear(input_shape[0], hidden_count),
-                                nn.ReLU(),      
-
+                                nn.ReLU(), 
                                 nn.Linear(hidden_count, hidden_count),
-                                nn.ReLU(),   
+                                nn.ReLU(),    
 
                                 nn.Linear(hidden_count, 1)
                             ]
