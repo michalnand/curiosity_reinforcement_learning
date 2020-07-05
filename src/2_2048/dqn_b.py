@@ -24,7 +24,7 @@ env.reset()
 
 agent = agents.AgentDQN(env, Model, Config)
 
-max_iterations = 20*(10**6)
+max_iterations = 60*(10**6)
 
 trainig = TrainingIterations(env, agent, max_iterations, path, 10000)
 trainig.run()
@@ -37,9 +37,8 @@ agent.iterations = 0
 while True:
     reward, done = agent.main()
 
-    env.render()
-    print("\n")
     if done:
-        print("\n\n\n\n\n\n\n")
-        time.sleep(1.0)
+        print(env.stats)
+        print(env.stats_norm)
+        print("\n")
 '''

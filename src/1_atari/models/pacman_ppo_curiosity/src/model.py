@@ -8,7 +8,7 @@ class Flatten(nn.Module):
 
 class Model(torch.nn.Module):
 
-    def __init__(self, input_shape, outputs_count, hidden_count = 256):
+    def __init__(self, input_shape, outputs_count, hidden_count = 512):
         super(Model, self).__init__()
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

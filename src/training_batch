@@ -1,13 +1,13 @@
-cd 2_2048
-python3 dqn_a.py
-python3 dqn_b.py
-python3 dqn_curiosity.py
-cd ..
 
 cd 1_atari
 python3 pacman_dqn.py
 python3 pacman_dqn_curiosity.py
 python3 pacman_ppo.py
 python3 pacman_ppo_curiosity.py
+cd ..
+
+cd 2_2048
+python3 dqn_a.py
+python3 dqn_b.py
 cd ..
 

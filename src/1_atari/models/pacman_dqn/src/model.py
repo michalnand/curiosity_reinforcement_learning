@@ -35,10 +35,10 @@ class Model(torch.nn.Module):
 
                         Flatten(),
 
-                        nn.Linear(fc_input_height*fc_input_width*64, 256),
+                        nn.Linear(fc_input_height*fc_input_width*64, 512),
                         nn.ReLU(),
                         
-                        nn.Linear(256, outputs_count)
+                        nn.Linear(512, outputs_count)
         ]
 
         for i in range(len(self.layers)):

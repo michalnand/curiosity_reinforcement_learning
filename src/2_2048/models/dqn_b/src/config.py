@@ -10,8 +10,7 @@ class Config():
         self.batch_size     = 64 
         self.learning_rate  = 0.0001
 
-        self.exploration = common.decay.Exponential(0.9999996, 1.0, 0.02, 0.02)
-
-        self.experience_replay_size = 16384
+        self.exploration = common.decay.Exponential(0.99999988, 1.0, 0.02, 0.02)
+        self.experience_replay_size = 16384 
  
 
