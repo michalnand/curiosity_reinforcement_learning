@@ -14,4 +14,5 @@ from .AgentDQNImagination import *
 
 from .AgentPPO import *
 from .AgentPPOCuriosity import *
+from .AgentPPOContinuous import *
 

@@ -147,9 +147,7 @@ class AgentPPO():
         '''
         log_probs_      = log_probs[range(len(log_probs)),  self.buffer.actions_b[env_id]]
         log_probs_old_  = log_probs_old[range(len(log_probs_old)), self.buffer.actions_b[env_id]]
-        
-
-                
+                        
         # Finding Surrogate Loss:
         advantage   = (target_values_b - values).detach()
 
@@ -161,9 +159,6 @@ class AgentPPO():
         loss_policy = -torch.min(surr1, surr2) 
         loss_policy = loss_policy.mean()
     
-
-        #loss_policy = -log_probs[range(len(log_probs)), self.buffer.actions_b[env_id]]*advantage
-        #loss_policy = loss_policy.mean()
 
         '''
         compute entropy loss, to avoid greedy strategy

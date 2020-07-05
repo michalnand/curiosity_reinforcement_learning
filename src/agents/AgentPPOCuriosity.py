@@ -168,13 +168,10 @@ class AgentPPOCuriosity():
         '''
         log_probs_      = log_probs[range(len(log_probs)),  self.buffer.actions_b[env_id]]
         log_probs_old_  = log_probs_old[range(len(log_probs_old)), self.buffer.actions_b[env_id]]
-        
-
-                
+         
         # Finding Surrogate Loss:
         advantage   = (target_values_b - values).detach()
 
-        
         ratios = torch.exp(log_probs_ - log_probs_old_)
         surr1 = ratios*advantage
         surr2 = torch.clamp(ratios, 1.0 - self.eps_clip, 1.0 + self.eps_clip)*advantage
@@ -182,10 +179,6 @@ class AgentPPOCuriosity():
         loss_policy = -torch.min(surr1, surr2) 
         loss_policy = loss_policy.mean()
     
-
-        #loss_policy = -log_probs[range(len(log_probs)), self.buffer.actions_b[env_id]]*advantage
-        #loss_policy = loss_policy.mean()
-
         '''
         compute entropy loss, to avoid greedy strategy
         L = beta*H(pi(s)) = beta*pi(s)*log(pi(s))

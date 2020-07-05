@@ -34,10 +34,6 @@ for i in range(envs_count):
     envs.append(env)
 
 
-obs             = envs[0].observation_space
-actions_count   = envs[0].action_space.n
-
-
  
 agent = agents.AgentPPO(envs, Model, Config)
 

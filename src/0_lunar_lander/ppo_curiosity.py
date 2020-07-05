@@ -34,11 +34,6 @@ for i in range(envs_count):
     env = LunarLanderWrapper(env)
     envs.append(env)
 
-
-obs             = envs[0].observation_space
-actions_count   = envs[0].action_space.n
-
-
  
 agent = agents.AgentPPOCuriosity(envs, Model, ModelEnv, Config)
 

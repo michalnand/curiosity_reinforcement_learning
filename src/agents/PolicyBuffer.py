@@ -2,13 +2,12 @@ import torch
 import numpy
 
 class PolicyBuffer:
-    def __init__(self, envs_count, buffer_size, state_shape, actions_size, device, discrete_actions = True):
+    def __init__(self, envs_count, buffer_size, state_shape, actions_size, device):
         self.envs_count     = envs_count
         self.buffer_size    = buffer_size
         self.state_shape    = state_shape
         self.actions_size  = actions_size
         self.device         = device
-        self.discrete_actions = discrete_actions
 
         self.clear()
   
@@ -19,11 +18,8 @@ class PolicyBuffer:
         self.logits_b           = torch.zeros((self.envs_count, self.buffer_size, self.actions_size)).to(self.device)
         self.values_b           = torch.zeros((self.envs_count, self.buffer_size, 1)).to(self.device)
         
-        if self.discrete_actions:
-            self.actions_b          = torch.zeros((self.envs_count, self.buffer_size), dtype=int)
-        else:
-            self.actions_b          = torch.zeros((self.envs_count, self.buffer_size, self.actions_size))
-
+        self.actions_b          = torch.zeros((self.envs_count, self.buffer_size), dtype=int)
+        
         self.rewards_b          = numpy.zeros((self.envs_count, self.buffer_size)) 
         self.dones_b            = numpy.zeros((self.envs_count, self.buffer_size), dtype=bool)
 
@@ -79,12 +75,8 @@ class PolicyBuffer:
         values_b           = torch.zeros((batch_size, 1)).to(self.device)
         actions_b          = torch.zeros((batch_size), dtype= self.actions_b[0][0][0].dtype)
 
-        if self.discrete_actions:
-            self.actions_b          = torch.zeros((self.batch_size), dtype=int)
-        else:
-            self.actions_b          = torch.zeros((self.batch_size, self.actions_size))
-
-
+        self.actions_b          = torch.zeros((self.batch_size), dtype=int)
+        
         rewards_b          = numpy.zeros((batch_size)) 
         dones_b            = numpy.zeros((batch_size), dtype=bool)
 
