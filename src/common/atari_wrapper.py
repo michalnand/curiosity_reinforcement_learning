@@ -173,6 +173,7 @@ class EpisodicLifeEnv(gym.Wrapper):
 def AtariWrapper(env, width = 96, height = 96, frame_stacking = 4):
     env = NoopResetEnv(env)
     env = FireResetEnv(env)
+    env = MaxAndSkipEnv(env)
     env = SkipEnv(env, 4)
     env = ClipRewardEnv(env)
     env = ResizeFrameEnv(env, width, height, frame_stacking)
