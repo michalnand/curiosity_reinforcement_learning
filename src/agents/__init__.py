@@ -16,3 +16,6 @@ from .AgentPPO import *
 from .AgentPPOCuriosity import *
 from .AgentPPOContinuous import *
 
+
+from .AgentDDPG import *
+
