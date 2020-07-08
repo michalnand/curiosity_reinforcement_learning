@@ -53,7 +53,8 @@ class AgentDQNCuriosity():
         
         q_values = self.model_dqn.get_q_values(self.state)
 
-        state_t = torch.from_numpy(self.state).to(self.model.device).unsqueeze(0)
+        state_t     = torch.from_numpy(self.state).to(self.model.device).unsqueeze(0).float()
+
         q_values = self.model(state_t)
         q_values = q_values.squeeze(0).detach().to("cpu").numpy()
         self.action = self.choose_action_e_greedy(q_values, epsilon)

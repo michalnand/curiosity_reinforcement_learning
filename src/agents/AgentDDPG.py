@@ -63,7 +63,8 @@ class AgentDDPG():
             epsilon = self.exploration.get_testing()
        
 
-        state_t     = torch.from_numpy(self.state).to(self.model_actor.device).unsqueeze(0)
+        state_t     = torch.from_numpy(self.state).to(self.model.device).unsqueeze(0).float()
+
         action_t    = self.model_actor(state_t)
         action      = action_t.squeeze(0).detach().to("cpu").numpy()
 

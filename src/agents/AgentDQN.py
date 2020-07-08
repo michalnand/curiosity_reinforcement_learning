@@ -42,6 +42,7 @@ class AgentDQN():
             epsilon = self.exploration.get_testing()
 
         state_t     = torch.from_numpy(self.state).to(self.model.device).unsqueeze(0).float()
+        
         q_values    = self.model(state_t)
         q_values    = q_values.squeeze(0).detach().to("cpu").numpy()
 
