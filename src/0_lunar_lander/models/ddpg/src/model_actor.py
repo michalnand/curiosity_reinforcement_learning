@@ -2,22 +2,6 @@ import torch
 import torch.nn as nn
 
 
-class NoiseLayer(torch.nn.Module):
-    def __init__(self, inputs_count, init_range = 0.1):
-        super(NoiseLayer, self).__init__()
-        
-        self.inputs_count   = inputs_count
-        self.device         = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-        w_initial   = init_range*torch.ones(self.inputs_count, device = self.device)
-        
-        self.w      = torch.nn.Parameter(w_initial, requires_grad = True)     
-        self.distribution = torch.distributions.normal.Normal(0.0, 1.0)
- 
-    def forward(self, x):
-        noise =  self.distribution.sample((self.inputs_count, )).detach().to(self.device)
-        return x + self.w*noise
-
 
 class Model(torch.nn.Module):
     def __init__(self, input_shape, outputs_count, hidden_count = 64):
@@ -32,14 +16,12 @@ class Model(torch.nn.Module):
                                     nn.Linear(hidden_count, hidden_count),
                                     nn.ReLU(),    
                                     nn.Linear(hidden_count, outputs_count),
-                                    nn.Tanh()                                    
+                                    nn.Tanh() 
         ]
 
-        '''
-        for i in range(len(self.layers)):
-            if hasattr(self.layers[i], "weight"):
-                torch.nn.init.uniform_(self.layers[i].weight, -0.003, 0.003)
-        '''
+        torch.nn.init.xavier_uniform_(self.layers[0].weight)
+        torch.nn.init.xavier_uniform_(self.layers[2].weight)
+        torch.nn.init.uniform_(self.layers[4].weight, -0.3, 0.3)
 
         self.model = nn.Sequential(*self.layers)
         self.model.to(self.device)

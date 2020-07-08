@@ -3,7 +3,7 @@ from .ExperienceBuffer import *
 
 
 class CuriosityModule:
-    def __init__(self, model, state_shape, actions_count, learning_rate = 0.001, buffer_size = 1024):
+    def __init__(self, model, state_shape, actions_count, learning_rate = 0.001, buffer_size = 1024, continuous_actions = False):
 
         self.actions_count = actions_count
 
@@ -11,6 +11,7 @@ class CuriosityModule:
         self.optimizer      = torch.optim.Adam(self.model.parameters(), lr= learning_rate)
 
         self.buffer = ExperienceBuffer(buffer_size)
+        self.continuous_actions = continuous_actions
 
 
     def add(self, state, action, reward, done = False):
@@ -24,7 +25,11 @@ class CuriosityModule:
         state_t, action_t, reward_t, state_next_t, done_t = self.buffer.sample(batch_size, self.model.device)
 
         reward_t = reward_t.unsqueeze(1)
-        action_t = self._one_hot_encoding(action_t)
+
+        if self.continuous_actions:
+            action_t = action_t
+        else:
+            action_t = self._one_hot_encoding(action_t)
 
         state_next_prediction_t, reward_prediction_t = self.model.forward(state_t, action_t)
 
@@ -42,9 +47,14 @@ class CuriosityModule:
 
     def eval(self, state_t, state_next_t, action):
         batch_size = state_t.shape[0]
-        action_t = torch.zeros((batch_size, self.actions_count))
-        action_t[range(batch_size), action] = 1.0
-        action_t.to(self.model.device)
+
+        if self.continuous_actions:
+            action_t = action.clone()
+        else:
+            action_t = torch.zeros((batch_size, self.actions_count))
+            action_t[range(batch_size), action] = 1.0
+        
+        action_t = action_t.to(self.model.device)
 
         state_next_prediction_t, reward_prediction_t = self.model.forward(state_t, action_t)
 

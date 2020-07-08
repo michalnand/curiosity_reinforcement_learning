@@ -41,8 +41,10 @@ class AgentDQN():
         else:
             epsilon = self.exploration.get_testing()
 
-        
-        q_values = self.model.get_q_values(self.state)
+        state_t     = torch.from_numpy(self.state).to(self.model.device).unsqueeze(0).float()
+        q_values    = self.model(state_t)
+        q_values    = q_values.squeeze(0).detach().to("cpu").numpy()
+
         self.action = self.choose_action_e_greedy(q_values, epsilon)
 
         state_new, self.reward, done, self.info = self.env.step(self.action)
@@ -54,11 +56,11 @@ class AgentDQN():
         if self.enabled_training and (self.iterations > self.experience_replay.size):
             if self.iterations%self.update_frequency == 0:
                 self.train_model()
-
-        self.state = state_new
             
         if done:
-            self.env.reset()
+            self.state = self.env.reset()
+        else:
+            self.state = state_new.copy()
 
         self.iterations+= 1
 

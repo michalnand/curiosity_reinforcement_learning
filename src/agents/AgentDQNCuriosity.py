@@ -25,17 +25,17 @@ class AgentDQNCuriosity():
 
 
        
-        self.observation_shape = self.env.observation_space.shape
+        self.state_shape = self.env.state_space.shape
         self.actions_count     = self.env.action_space.n
 
         self.experience_replay = ExperienceBuffer(config.experience_replay_size)
 
-        self.model_dqn      = ModelDQN.Model(self.observation_shape, self.actions_count)
+        self.model_dqn      = ModelDQN.Model(self.state_shape, self.actions_count)
         self.optimizer_dqn  = torch.optim.Adam(self.model_dqn.parameters(), lr= config.learning_rate)
 
-        self.curiosity_module = CuriosityModule(ModelCuriosity, self.observation_shape, self.actions_count, config.curiosity_learning_rate, config.curiosity_buffer_size)
+        self.curiosity_module = CuriosityModule(ModelCuriosity, self.state_shape, self.actions_count, config.curiosity_learning_rate, config.curiosity_buffer_size)
 
-        self.observation    = env.reset()
+        self.state    = env.reset()
         self.enable_training()
 
     def enable_training(self):
@@ -51,14 +51,19 @@ class AgentDQNCuriosity():
         else:
             epsilon = self.exploration.get_testing()
         
-        q_values = self.model_dqn.get_q_values(self.observation)
+        q_values = self.model_dqn.get_q_values(self.state)
+
+        state_t = torch.from_numpy(self.state).to(self.model.device).unsqueeze(0)
+        q_values = self.model(state_t)
+        q_values = q_values.squeeze(0).detach().to("cpu").numpy()
         self.action = self.choose_action_e_greedy(q_values, epsilon)
 
-        observation_new, self.reward, done, self.info = self.env.step(self.action)
+
+        state_new, self.reward, done, self.info = self.env.step(self.action)
 
         if self.enabled_training:
-            self.experience_replay.add(self.observation, self.action, self.reward, done)
-            self.curiosity_module.add(self.observation, self.action, self.reward)
+            self.experience_replay.add(self.state, self.action, self.reward, done)
+            self.curiosity_module.add(self.state, self.action, self.reward)
 
         if self.enabled_training and self.iterations%self.update_frequency == 0:
             self.curiosity_module.train()
@@ -68,7 +73,7 @@ class AgentDQNCuriosity():
                 self.train_model()
 
         
-        self.observation = observation_new
+        self.state = state_new
             
         if done:
             self.env.reset()

@@ -35,12 +35,12 @@ class AgentDDPG():
 
         for target_param, param in zip(self.model_actor_target.parameters(), self.model_actor.parameters()):
             target_param.data.copy_(param.data)
+
         for target_param, param in zip(self.model_critic_target.parameters(), self.model_critic.parameters()):
             target_param.data.copy_(param.data)
 
         self.optimizer_actor    = torch.optim.Adam(self.model_actor.parameters(), lr= config.actor_learning_rate)
-        self.optimizer_critic   = torch.optim.Adam(self.model_critic.parameters(), lr= config.critic_learning_rate)
-
+        self.optimizer_critic   = torch.optim.Adam(self.model_critic.parameters(), lr= config.critic_learning_rate, weight_decay=config.critic_learning_rate*0.01)
 
 
         self.state    = env.reset()
@@ -61,11 +61,17 @@ class AgentDDPG():
             epsilon = self.exploration.get()
         else:
             epsilon = self.exploration.get_testing()
+       
 
         state_t     = torch.from_numpy(self.state).to(self.model_actor.device).unsqueeze(0)
         action_t    = self.model_actor(state_t)
         action      = action_t.squeeze(0).detach().to("cpu").numpy()
-        action      = action + numpy.random.normal(0.0, epsilon + 10**-4, self.actions_count)
+
+        noise  = numpy.random.normal(loc = 0.0, scale = epsilon, size = self.actions_count)
+        action = action + epsilon*noise
+
+        action = numpy.clip(action, -1.0, 1.0)
+
         state_new, self.reward, done, self.info = self.env.step(action)
 
         if self.enabled_training:
@@ -75,10 +81,12 @@ class AgentDDPG():
             if self.iterations%self.update_frequency == 0:
                 self.train_model()
 
-        self.state = state_new
             
         if done:
-            self.env.reset()
+            self.state = self.env.reset()
+        else:
+            self.state = state_new.copy()
+
 
         self.iterations+= 1
 
@@ -88,32 +96,32 @@ class AgentDDPG():
     def train_model(self):
         state_t, action_t, reward_t, state_next_t, done_t = self.experience_replay.sample(self.batch_size, self.model_critic.device)
         
-        #q values, state now, state next
-        q_predicted      = self.model_critic.forward(state_t, action_t)
+        reward_t = reward_t.unsqueeze(-1)
+        done_t   = (1.0 - done_t).unsqueeze(-1)
 
         action_next_t = self.model_actor_target.forward(state_next_t).detach()
-        q_predicted_next = self.model_critic_target.forward(state_next_t, action_next_t).detach()
-
+        value_next_t = self.model_critic_target.forward(state_next_t, action_next_t).detach()
 
         #critic loss
-        reward_t = reward_t.unsqueeze(-1)
-        q_predicted_next_ = reward_t + self.gamma*q_predicted_next
+        value_target    = reward_t + self.gamma*done_t*value_next_t
+        value_predicted = self.model_critic.forward(state_t, action_t)
 
-
-        critic_loss = ((q_predicted_next_ - q_predicted)**2).mean()
-
-        #actor loss
-        actor_loss = -self.model_critic.forward(state_t, self.model_actor.forward(state_t)).mean()
-        
-
-
-
-        # update models
+        critic_loss = ((value_target - value_predicted)**2)
+        critic_loss = critic_loss.mean()
+     
+        #update critic
         self.optimizer_critic.zero_grad()
         critic_loss.backward() 
         self.optimizer_critic.step()
 
-        self.optimizer_actor.zero_grad()
+        
+
+        #actor loss
+        actor_loss = -self.model_critic.forward(state_t, self.model_actor.forward(state_t))
+        actor_loss = actor_loss.mean()
+
+        #update actor
+        self.optimizer_actor.zero_grad()       
         actor_loss.backward()
         self.optimizer_actor.step()
 
@@ -125,14 +133,6 @@ class AgentDDPG():
         for target_param, param in zip(self.model_critic_target.parameters(), self.model_critic.parameters()):
             target_param.data.copy_((1.0 - self.tau)*target_param.data + self.tau*param.data)
 
-        
-    def choose_action_e_greedy(self, q_values, epsilon):
-        result = numpy.argmax(q_values)
-        
-        if numpy.random.random() < epsilon:
-            result = numpy.random.randint(len(q_values))
-        
-        return result
 
     def save(self, save_path):
         self.model_critic.save(save_path)

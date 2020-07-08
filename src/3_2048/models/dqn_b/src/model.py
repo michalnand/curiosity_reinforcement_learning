@@ -95,6 +95,6 @@ class Model(torch.nn.Module):
         name = path + "trained/model_dqn.pt"
         print("loading", name) 
 
-        self.model.load_state_dict(torch.load(name))
+        self.model.load_state_dict(torch.load(name, map_location = self.device))
         self.model.eval() 
      

@@ -22,25 +22,20 @@ class LunarLanderWrapper(gym.Wrapper):
         
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
-        reward = numpy.clip(reward / 10.0, -1.0, 1.0)
+        reward = reward/100.0
         return obs, reward, done, info
-
-
 
 env = gym.make("LunarLanderContinuous-v2")
 env = LunarLanderWrapper(env)
 
 
- 
 agent = agents.AgentDDPG(env, ModelCritic, ModelActor, Config)
 
-max_iterations = 100000
-
-#trainig = TrainingIterations(env, agent, max_iterations, path, 1000)
-#trainig.run() 
+trainig = TrainingEpisodes(env, agent, episodes_count=4000, episode_max_length=1000, saving_path=path, logging_iterations=1000)
+trainig.run()
 
 
-
+'''
 agent.load(path)
 
 
@@ -50,3 +45,4 @@ while True:
     agent.main()
     env.render()
     time.sleep(0.01)
+'''

@@ -7,8 +7,8 @@ import gym_2048
 import gym
 import numpy
 
-from common.Training import *
-from Game2048Wrapper import *
+from common.Game2048Wrapper import *
+
 
 path = "models/game2048_dqn_a/"
 

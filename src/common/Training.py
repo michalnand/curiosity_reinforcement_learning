@@ -3,57 +3,40 @@ from .TrainingLog import *
 
 
 class TrainingEpisodes:
-    def __init__(self, env, agent, episodes_count, episode_max_length, saving_path, saving_period_episode = 500):
+    def __init__(self, env, agent, episodes_count, episode_max_length, saving_path, logging_iterations = 10000):
         self.env = env
         self.agent = agent
         self.episodes_count = episodes_count
         self.episode_max_length = episode_max_length
         self.saving_path = saving_path
-        self.saving_period_episode = saving_period_episode
+        self.logging_iterations = logging_iterations
 
     def run(self):
         
-        log = TrainingLog(self.saving_path + "result/result.log", self.saving_period_episode)
+        log = TrainingLog(self.saving_path + "result/result.log", self.logging_iterations, True)
         new_best = False
-
+        iterations = 0
         for episode in range(self.episodes_count):
 
             self.env.reset()
-            steps = 0
-            while True:
+
+            for i in range(self.episode_max_length):
                 reward, done = self.agent.main()
-                
-                steps+= 1
+                log.add(reward, done)
 
                 if log.is_best:
                     new_best = True
-
-                if steps >= self.episode_max_length:
-                    log.add(reward, True)
-                    break
+            
+                iterations+= 1
+                if iterations% self.logging_iterations == 0 and new_best == True:
+                    new_best = False 
+                    print("\n\n")
+                    print("saving new best with score = ", log.episode_score_best)
+                    self.agent.save(self.saving_path)
+                    print("\n\n")
 
                 if done:
-                    log.add(reward, True)
-                    break 
-
-                log.add(reward, False)
-                
-            if episode%self.saving_period_episode == 0 and new_best == True:
-                new_best = False 
-                print("\n\n")
-                print("saving new best with score = ", log.episode_score_best)
-                self.agent.save(self.saving_path)
-                print("\n\n")
-
-            
-
-        if new_best == True: 
-            new_best = False 
-            print("\n\n")
-            print("saving new best with score = ", log.episode_score_best)
-            self.agent.save(self.saving_path)
-            print("\n\n")
-
+                    break
 
 
 

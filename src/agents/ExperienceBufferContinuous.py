@@ -74,7 +74,7 @@ class ExperienceBufferContinuous():
             state_next_t[i] = torch.from_numpy(self.state_b[n+1]).to(device)
             done_t[i]       = torch.from_numpy(numpy.asarray(self.done_b[n])).to(device)
 
-        return state_t, action_t, reward_t, state_next_t, done_t
+        return state_t.detach(), action_t.detach(), reward_t.detach(), state_next_t.detach(), done_t.detach()
 
 
 if __name__ == "__main__":

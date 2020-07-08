@@ -25,7 +25,9 @@ plot '../models/a2c/result/result.log' using 1:4 title 'a2c'  with lines lw 3, \
      '../models/a2c_curiosity/result/result.log' using 1:4 title 'a2c + curiosity'  with lines lw 3, \
      '../models/ppo/result/result.log' using 1:4 title 'ppo'  with lines lw 3, \
      '../models/ppo_continuous/result/result.log' using 1:4 title 'ppo continuous'  with lines lw 3, \
-     '../models/ppo_curiosity/result/result.log' using 1:4 title 'ppo + curiosity'  with lines lw 3
+     '../models/ppo_curiosity/result/result.log' using 1:4 title 'ppo + curiosity'  with lines lw 3, \
+     '../models/ddpg/result/result.log' using 1:4 title 'DDPG'  with lines lw 3, \
+     '../models/ddpg_curiosity/result/result.log' using 1:4 title 'DDPG + curiosity'  with lines lw 3
 
 
 
@@ -39,6 +41,8 @@ plot '../models/a2c/result/result.log' using 1:($4/$1) title 'a2c'  with lines l
      '../models/ppo/result/result.log' using 1:($4/$1) title 'ppo'  with lines lw 3, \
      '../models/ppo_continuous/result/result.log' using 1:($4/$1) title 'ppo continuous'  with lines lw 3, \
      '../models/ppo_curiosity/result/result.log' using 1:($4/$1) title 'ppo + curiosity'  with lines lw 3, \
+     '../models/ddpg/result/result.log' using 1:($4/$1) title 'DDPG'  with lines lw 3, \
+     '../models/ddpg_curiosity/result/result.log' using 1:($4/$1) title 'DDPG + curiosity'  with lines lw 3
 
 
 set xlabel "episodes"
@@ -51,3 +55,18 @@ plot '../models/a2c/result/result.log' using 2:5 title 'a2c'  with lines lw 3, \
      '../models/ppo/result/result.log' using 2:5 title 'ppo'  with lines lw 3, \
      '../models/ppo_continuous/result/result.log' using 2:5 title 'ppo continuous'  with lines lw 3, \
      '../models/ppo_curiosity/result/result.log' using 2:5 title 'ppo'  with lines lw 3, \
+     '../models/ddpg/result/result.log' using 2:5 title 'DDPG'  with lines lw 3, \
+     '../models/ddpg_curiosity/result/result.log' using 2:5 title 'DDPG + curiosity'  with lines lw 3
+
+
+
+
+
+
+set xlabel "episodes"
+set ylabel "score per episode"
+set output 'training_score_per_episode_continuous.png'
+
+plot '../models/a2c_continuous/result/result.log' using ($2*8):5 title 'a2c continuous'  with lines lw 3, \
+     '../models/ddpg/result/result.log' using 2:5 title 'DDPG'  with lines lw 3, \
+     '../models/ddpg_curiosity/result/result.log' using 2:5 title 'DDPG + curiosity'  with lines lw 3
