@@ -11,7 +11,7 @@ class Config():
         self.batch_size          = 64
         self.update_frequency    = 4
 
-        self.exploration   = common.decay.Linear(200000, 1.0, 0.3, 0.2)
+        self.exploration   = common.decay.Linear(200000, 1.0, 0.5, 0.2)
   
         self.experience_replay_size = 16384
 
