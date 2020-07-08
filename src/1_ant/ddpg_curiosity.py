@@ -25,7 +25,7 @@ env = gym.make("AntPyBulletEnv-v0")
  
 agent = agents.AgentDDPGCuriosity(env, ModelCritic, ModelActor, ModelEnv, Config)
 
-trainig = TrainingEpisodes(env, agent, episodes_count=8000, episode_max_length=1000, saving_path=path, logging_iterations=1000)
+trainig = TrainingEpisodes(env, agent, episodes_count=4000, episode_max_length=1000, saving_path=path, logging_iterations=1000)
 trainig.run()
 
 '''
