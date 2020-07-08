@@ -60,7 +60,7 @@ class ExperienceBufferContinuous():
 
 
         state_t         = torch.zeros(state_shape,  dtype=torch.float32).to(device)
-        action_t        = torch.zeros(action_shape,  dtype=torch.float32)
+        action_t        = torch.zeros(action_shape,  dtype=torch.float32).to(device)
         reward_t        = torch.zeros(reward_shape,  dtype=torch.float32).to(device)
         state_next_t    = torch.zeros(state_shape,  dtype=torch.float32).to(device)
         done_t          = torch.zeros(done_shape,  dtype=torch.float32).to(device)
@@ -69,7 +69,7 @@ class ExperienceBufferContinuous():
         for i in range(0, batch_size):
             n  = numpy.random.randint(self.length() - 1)
             state_t[i]      = torch.from_numpy(self.state_b[n]).to(device)
-            action_t[i]     = torch.from_numpy(self.action_b[n]).to(device)
+            action_t[i]     = torch.from_numpy(self.action_b[n]).to(device).to(device)
             reward_t[i]     = torch.from_numpy(numpy.asarray(self.reward_b[n])).to(device)
             state_next_t[i] = torch.from_numpy(self.state_b[n+1]).to(device)
             done_t[i]       = torch.from_numpy(numpy.asarray(self.done_b[n])).to(device)
