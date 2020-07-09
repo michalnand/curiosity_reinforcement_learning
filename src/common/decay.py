@@ -71,15 +71,13 @@ class LinearDelayed():
 
         self.decay = (self.start_value - self.end_value)*1.0/iterations   
 
-        self.epsilon = self.end_value
+        self.epsilon = self.start_value
 
         self.start = False
         self.iterations = 0
 
     def process(self):
-        if self.iterations == self.start_iterations:
-            self.epsilon = self.start_value
-        elif self.iterations > self.start_iterations:
+        if self.iterations > self.start_iterations:
             if self.epsilon > self.end_value:
                 self.epsilon-= self.decay
         
