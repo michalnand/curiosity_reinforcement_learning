@@ -155,9 +155,9 @@ class AgentDDPGCuriosity():
     def save(self, save_path):
         self.model_critic.save(save_path)
         self.model_actor.save(save_path)
-        self.curiosity_module.save(save_path + "trained/") 
+        self.curiosity_module.save(save_path) 
 
     def load(self, save_path):
         self.model_critic.load(save_path)
         self.model_actor.load(save_path)
-        self.curiosity_module.load(save_path + "trained/")     
+        self.curiosity_module.load(save_path)     

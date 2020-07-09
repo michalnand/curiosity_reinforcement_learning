@@ -119,8 +119,8 @@ class AgentDQNCuriosity():
 
     def save(self, save_path):
         self.model_dqn.save(save_path)
-        self.curiosity_module.save(save_path + "trained/") 
+        self.curiosity_module.save(save_path) 
 
     def load(self, save_path):
         self.model.load(save_path)
-        self.curiosity_module.load(save_path + "trained/")     
+        self.curiosity_module.load(save_path)     

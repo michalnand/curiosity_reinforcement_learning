@@ -44,15 +44,15 @@ class Model(torch.nn.Module):
         return state_prediction, self.model_reward(features)
 
     def save(self, path):
-        torch.save(self.model_features.state_dict(), path + "model_env_features.pt")
-        torch.save(self.model_state.state_dict(), path + "model_env_state.pt")
-        torch.save(self.model_reward.state_dict(), path + "model_env_reward.pt")
+        torch.save(self.model_features.state_dict(), path + "trained/model_env_features.pt")
+        torch.save(self.model_state.state_dict(), path + "trained/model_env_state.pt")
+        torch.save(self.model_reward.state_dict(), path + "trained/model_env_reward.pt")
 
 
     def load(self, path):       
-        self.model_features.load_state_dict(torch.load(path + "model_env_features.pt", map_location = self.device))
-        self.model_state.load_state_dict(torch.load(path + "model_env_state.pt", map_location = self.device))
-        self.model_reward.load_state_dict(torch.load(path + "model_env_reward.pt", map_location = self.device))
+        self.model_features.load_state_dict(torch.load(path + "trained/model_env_features.pt", map_location = self.device))
+        self.model_state.load_state_dict(torch.load(path + "trained/model_env_state.pt", map_location = self.device))
+        self.model_reward.load_state_dict(torch.load(path + "trained/model_env_reward.pt", map_location = self.device))
 
         self.model_features.eval() 
         self.model_state.eval() 
