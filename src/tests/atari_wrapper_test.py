@@ -23,7 +23,7 @@ agent = agents.AgentRandom(env)
 print(obs)
 print(obs.shape)
 
-k = 0.1
+k = 0.02
 fps = 0
 while True:
     time_start = time.time()
@@ -33,11 +33,12 @@ while True:
 
     fps = (1.0-k)*fps + k*1.0/(time_stop - time_start)
 
-    print(fps)
 
     if reward != 0:
         print("reward = ", reward)
+    
     if done:
+        print("FPS = ", round(fps, 1))
         print("DONE \n\n")
     
     time.sleep(0.01)

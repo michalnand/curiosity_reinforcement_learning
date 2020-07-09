@@ -14,8 +14,3 @@ class Config():
         self.exploration   = common.decay.Linear(1000000, 1.0, 0.2, 0.2)
   
         self.experience_replay_size = 16384
-
-        
-        self.curiosity_beta = 0.01
-        self.curiosity_learning_rate = 0.0001 
-        self.curiosity_buffer_size = 4069
