@@ -25,10 +25,11 @@ env.render()
  
 agent = agents.AgentDDPGCuriosity(env, ModelCritic, ModelActor, ModelEnv, Config)
 
-#trainig = TrainingEpisodes(env, agent, episodes_count=4000, episode_max_length=1000, saving_path=path, logging_iterations=1000)
-#trainig.run()
+trainig = TrainingEpisodes(env, agent, episodes_count=2000, episode_max_length=1000, saving_path=path, logging_iterations=1000)
+trainig.run()
 
 
+'''
 agent.load(path)
 agent.disable_training()
 agent.iterations = 0
@@ -36,3 +37,4 @@ while True:
     agent.main()
     env.render()
     time.sleep(0.01)
+'''

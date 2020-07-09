@@ -15,10 +15,10 @@ class ResidualBlock(torch.nn.Module):
 
         self.layers = []
         
-        self.layers.append(nn.Conv2d(channels, channels, kernel_size=2, stride=1, padding=0))
+        self.layers.append(nn.Conv2d(channels, channels, kernel_size=3, stride=1, padding=0))
         self.layers.append(nn.BatchNorm2d(channels))
         self.layers.append(nn.ReLU())
-        self.layers.append(nn.ConvTranspose2d(channels, channels, kernel_size=2, stride=1, padding=0))
+        self.layers.append(nn.ConvTranspose2d(channels, channels, kernel_size=3, stride=1, padding=0))
         self.layers.append(nn.BatchNorm2d(channels))
         
         self.activation = nn.ReLU()
@@ -39,7 +39,7 @@ class Flatten(nn.Module):
 
 class Model(torch.nn.Module):
 
-    def __init__(self, input_shape, outputs_count, features_count = 128, n_blocks = 4, hidden_count = 256):
+    def __init__(self, input_shape, outputs_count, features_count = 128, n_blocks = 2, hidden_count = 256):
         super(Model, self).__init__()
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

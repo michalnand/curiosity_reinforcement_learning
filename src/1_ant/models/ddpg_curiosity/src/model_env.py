@@ -7,7 +7,7 @@ class Model(torch.nn.Module):
         super(Model, self).__init__()
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-         
+
         self.model_features = nn.Sequential(
                                             nn.Linear(input_shape[0] + outputs_count, hidden_count),
                                             nn.ReLU(),
