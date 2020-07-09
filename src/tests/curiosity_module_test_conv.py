@@ -23,7 +23,7 @@ actions_count   = env.action_space.n
 cm =  agents.CuriosityModule(Model, state.shape, actions_count, learning_rate = 0.001, buffer_size = 4096)
 
 
-for i in range(100000):
+for i in range(10000):
     action = numpy.random.randint(actions_count)
     state_, reward, done, _ = env.step(action)
 
@@ -38,7 +38,7 @@ for i in range(100000):
        
         curiosity, reward_prediction = cm.eval_np(state, state_, action)
 
-        print(curiosity)
+        print(curiosity*100)
         print(reward, reward_prediction)
 
         print("\n\n\n")
@@ -47,3 +47,11 @@ for i in range(100000):
         state = env.reset()
     else:
         state = state_.copy()
+'''
+action = 1
+
+state_now, reward, done, _ = env.step(action)
+state_next, reward, done, _ = env.step(action)
+
+curiosity, reward_prediction = cm.eval_np(state_now, state_next, action_now)
+'''

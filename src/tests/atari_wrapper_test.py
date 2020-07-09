@@ -15,10 +15,13 @@ import common.atari_wrapper
 #env = gym.make("BreakoutNoFrameskip-v4")
 env = gym.make("MsPacmanNoFrameskip-v4")
 env = common.atari_wrapper.AtariWrapper(env)
-
-obs = env.reset()
+env.reset()
 
 agent = agents.AgentRandom(env)
+
+
+obs, _, _, _ = env.step(0)
+
 
 print(obs)
 print(obs.shape)

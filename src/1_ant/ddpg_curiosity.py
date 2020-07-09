@@ -29,7 +29,6 @@ agent = agents.AgentDDPGCuriosity(env, ModelCritic, ModelActor, ModelEnv, Config
 #trainig.run()
 
 
-
 agent.load(path)
 agent.disable_training()
 agent.iterations = 0

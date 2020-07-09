@@ -37,7 +37,6 @@ class Model(torch.nn.Module):
                         nn.ReLU(),
                         nn.MaxPool2d(kernel_size=2, stride=2, padding=0),
                          
-
                         Flatten(),
 
                         nn.Linear(fc_input_height*fc_input_width*64, 512),
@@ -58,13 +57,6 @@ class Model(torch.nn.Module):
     def forward(self, state):
         return self.model.forward(state)
 
-    def get_q_values(self, state):
-        with torch.no_grad():
-            state_dev       = torch.tensor(state, dtype=torch.float32).detach().to(self.device).unsqueeze(0)
-            network_output  = self.forward(state_dev)
-
-            return network_output[0].to("cpu").detach().numpy()
-    
     def save(self, path):
         name = path + "trained/model_dqn.pt"
         print("saving", name)

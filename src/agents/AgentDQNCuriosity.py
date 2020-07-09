@@ -24,9 +24,8 @@ class AgentDQNCuriosity():
         self.update_frequency = config.update_frequency
 
 
-       
-        self.state_shape = self.env.state_space.shape
-        self.actions_count     = self.env.action_space.n
+        self.state_shape    = self.env.observation_space.shape
+        self.actions_count  = self.env.action_space.n
 
         self.experience_replay = ExperienceBuffer(config.experience_replay_size)
 
@@ -51,14 +50,12 @@ class AgentDQNCuriosity():
         else:
             epsilon = self.exploration.get_testing()
         
-        q_values = self.model_dqn.get_q_values(self.state)
+        state_t     = torch.from_numpy(self.state).to(self.model_dqn.device).unsqueeze(0).float()
+        q_values    = self.model_dqn(state_t)
+        q_values    = q_values.squeeze(0).detach().to("cpu").numpy()
 
-        state_t     = torch.from_numpy(self.state).to(self.model.device).unsqueeze(0).float()
 
-        q_values = self.model(state_t)
-        q_values = q_values.squeeze(0).detach().to("cpu").numpy()
         self.action = self.choose_action_e_greedy(q_values, epsilon)
-
 
         state_new, self.reward, done, self.info = self.env.step(self.action)
 

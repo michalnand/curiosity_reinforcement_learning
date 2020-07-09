@@ -31,10 +31,27 @@ import gym
 import numpy as np
 from gym import spaces
 
-from matplotlib import pyplot as plt
+
+from nes_py.wrappers import JoypadSpace
+from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
+
+
+
+class SetDimensions(gym.Wrapper):
+    def __init__(self, env=None, width = 96, height = 96, frame_stacking = 4):
+        super(SetDimensions, self).__init__(env)
+        self.width  = width
+        self.height = height
+        self.frame_stacking = frame_stacking
+
+        self.actions_count   = env.action_space.n
+        self.shape           = (self.frame_stacking, self.height, self.width)
+
+
+
 
 class NoopResetEnv(gym.Wrapper):
-    def __init__(self, env=None, noop_max = 30):
+    def __init__(self, env=None, noop_max=30):
         super(NoopResetEnv, self).__init__(env)
         self.noop_max = noop_max
         assert env.unwrapped.get_action_meanings()[0] == 'NOOP'
@@ -57,6 +74,8 @@ class FireResetEnv(gym.Wrapper):
         obs, _, _, _ = self.env.step(2)
 
         return obs
+
+
 
 class MaxAndSkipEnv(gym.Wrapper):
     def __init__(self, env, skip=4):
@@ -96,89 +115,147 @@ class SkipEnv(gym.Wrapper):
         return obs, total_reward, done, info
 
 
-class ClipRewardEnv(gym.RewardWrapper):
+class RewardEnv(gym.RewardWrapper):
     def __init__(self, env):
         gym.RewardWrapper.__init__(self, env)
 
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
-        reward = np.clip(reward, -1.0, 1.0)
+        
+        if done:
+            if info["flag_get"]:
+                reward+= 50.0
+            else:
+                reward+= -50.0
+ 
+        reward = reward/10.0 
         return obs, reward, done, info
 
-
-class ResizeFrameEnv(gym.Wrapper):
-    def __init__(self, env, width = 96, height = 96, frame_stacking = 4):
+'''
+class LiveLostReward(gym.Wrapper):
+    def __init__(self, env):
         gym.Wrapper.__init__(self, env)
+        self.round_done = True
+        self.game_done = True
+        self.lives_current = 3
 
-        self.width  = width
-        self.height = height
-        self.frame_stacking = frame_stacking    
-        self.observation_space = spaces.Box(low=0, high=1.0, shape=(self.frame_stacking, self.height, self.width), dtype=float)
     
     def reset(self):
-        obs = self.env.reset()
+        if self.game_done:
+            observation = self.env.reset()
 
-        self.slices = np.zeros((self.frame_stacking, self.height, self.width))
-       
-        return self._parse_state(obs)
+            self.lives_current = 3
+            self.round_done = False
+            self.game_done = False
+        else:
+            observation, _, _, _ = self.env.step(0)
+        return observation
 
     def step(self, action):
-        obs, reward, done, info = self.env.step(action)
+        observation, reward, done, info = self.env.step(action)
+        
+        self.game_done = done
 
-        return self._parse_state(obs), reward, done, info
+        lives = info["life"]
+        if lives < self.lives_current:
+            self.lives_current = lives
+            reward = -1.0
+            self.round_done = True
+        else:
+            self.round_done = False
 
-    def _parse_state(self, frame):
+        return observation, reward, [self.round_done, self.game_done], info
+'''
+
+
+class LiveLostReward(gym.Wrapper):
+    def __init__(self, env):
+        gym.Wrapper.__init__(self, env)
+     
+
+    def step(self, action):
+        observation, reward, done, info = self.env.step(action)
+        return observation, reward, [done, done], info
+
+
+class ResizeFrameEnv(gym.ObservationWrapper):
+    def __init__(self, env, width = 96, height = 96):
+        gym.ObservationWrapper.__init__(self, env)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(self.height, self.width, 1), dtype=np.uint8)
+        
+    def observation(self, frame):
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
         frame = cv2.resize(frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
+        return frame
+
+
+class FrameStack(gym.Wrapper):
+    def __init__(self, env):
+        gym.Wrapper.__init__(self, env)
+    
+    def reset(self):
+        ob = self.env.reset()
+        self.slices = np.zeros(self.shape)
+        for i in range(0, self.frame_stacking):
+            self.slices[i] = ob
+
+        return self.get_state()
+
+    def step(self, action):
+        ob, reward, done, info = self.env.step(action)
 
         for i in reversed(range(self.frame_stacking-1)):
             self.slices[i+1] = self.slices[i].copy()
         
-        self.slices[0] = np.array(frame).copy()/255.0
+        self.slices[0] = np.array(ob).copy()
+            
+        return self.get_state(), reward, done, info
 
+    def get_state(self):
         return self.slices
 
 
-class EpisodicLifeEnv(gym.Wrapper):
+class MakeTensorEnv(gym.ObservationWrapper):
     def __init__(self, env):
-        gym.Wrapper.__init__(self, env)
-        self.lives = 0
-        self.was_real_done  = True
+        gym.ObservationWrapper.__init__(self, env)
 
-    def _step(self, action):
-        obs, reward, done, info = self.env.step(action)
-        self.was_real_done = done
-        
-        lives = self.env.unwrapped.ale.lives()
-        if lives < self.lives and lives > 0:
-            done    = True
-            reward  = -1.0
-        if lives == 0 and self.inital_lives > 0:
-            reward = -1.0
-
-        self.lives = lives
-        return obs, reward, done, info
-
-    def _reset(self, **kwargs):
-        if self.was_real_done:
-            obs = self.env.reset(**kwargs)
-        else:
-            obs, _, _, _ = self.env.step(0)
-        self.lives = self.env.unwrapped.ale.lives()
-        self.inital_lives = self.env.unwrapped.ale.lives()
-        return obs
+    def observation(self, observation):
+        #swaped = np.moveaxis(observation, 0, 0)
+        #result = np.reshape(swaped, (1, observation.shape[2], self.height, self.width))
+        result = observation/255.0
+        return result
 
 
 
-def AtariWrapper(env, width = 96, height = 96, frame_stacking = 4):
+
+def Create(env, width = 96, height = 96, frame_stacking = 4, dummy_moves = 1024):
+    env = JoypadSpace(env, SIMPLE_MOVEMENT)
+    env = SetDimensions(env, width, height, frame_stacking)
     env = NoopResetEnv(env)
-    env = FireResetEnv(env)
-    env = MaxAndSkipEnv(env)
     env = SkipEnv(env, 4)
-    env = ClipRewardEnv(env)
-    env = ResizeFrameEnv(env, width, height, frame_stacking)
-    env = EpisodicLifeEnv(env)
-    
+    env = RewardEnv(env)
+    env = LiveLostReward(env)
+    env = ResizeFrameEnv(env)
+    env = FrameStack(env)
+    env = MakeTensorEnv(env)
+
+    env.observation_space.shape = (env.shape[0], env.shape[1], env.shape[2])
+
+    env.reset()
+
+    actions_count     = env.action_space.n
+    for i in range(dummy_moves):
+        action = np.random.randint(actions_count)
+        _, _, done, _ = env.step(action)
+
+        if done[0]:
+            env.reset() 
+
+    env.reset()
+    env.reset()
+    env.reset()
+ 
+
     return env
     
 
