@@ -107,7 +107,7 @@ class ClipRewardEnv(gym.RewardWrapper):
         return obs, reward, done, info
 
 
-def AtariWrapper(env, height = 96, width = 96, frame_stacking=4, frame_skipping=4):
+def SuperMarioWrapper(env, height = 96, width = 96, frame_stacking=4, frame_skipping=4):
     env = JoypadSpace(env, SIMPLE_MOVEMENT)
     env = SkipEnv(env, frame_skipping)
     env = ResizeEnv(env, height, width, frame_stacking)

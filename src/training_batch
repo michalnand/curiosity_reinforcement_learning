@@ -1,11 +1,6 @@
 
 
-cd 0_lunar_lander
-python3 ddpg.py
-python3 ddpg_curiosity.py
-cd ..
-
-cd 1_ant
+cd 2_atari
 python3 ddpg.py
 python3 ddpg_curiosity.py
 cd ..
