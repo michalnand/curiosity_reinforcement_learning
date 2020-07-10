@@ -15,23 +15,17 @@ class AgentDDPG():
         self.tau                =  config.tau
 
         self.exploration    = config.exploration
-
-       
+    
         self.state_shape    = self.env.observation_space.shape
         self.actions_count  = self.env.action_space.shape[0]
 
         self.experience_replay = ExperienceBufferContinuous(config.experience_replay_size)
 
+        self.model_actor            = ModelActor.Model(self.state_shape, self.actions_count)
+        self.model_actor_target     = ModelActor.Model(self.state_shape, self.actions_count)
 
-
-        self.model_actor    = ModelActor.Model(self.state_shape, self.actions_count)
-        self.model_actor_target    = ModelActor.Model(self.state_shape, self.actions_count)
-
-        self.model_critic   = ModelCritic.Model(self.state_shape, self.actions_count)
-        self.model_critic_target   = ModelCritic.Model(self.state_shape, self.actions_count)
-
-        
-        
+        self.model_critic           = ModelCritic.Model(self.state_shape, self.actions_count)
+        self.model_critic_target    = ModelCritic.Model(self.state_shape, self.actions_count)
 
         for target_param, param in zip(self.model_actor_target.parameters(), self.model_actor.parameters()):
             target_param.data.copy_(param.data)
@@ -42,8 +36,7 @@ class AgentDDPG():
         self.optimizer_actor    = torch.optim.Adam(self.model_actor.parameters(), lr= config.actor_learning_rate)
         self.optimizer_critic   = torch.optim.Adam(self.model_critic.parameters(), lr= config.critic_learning_rate, weight_decay=config.critic_learning_rate*0.01)
 
-
-        self.state    = env.reset()
+        self.state          = env.reset()
 
         self.iterations     = 0
 
@@ -62,7 +55,6 @@ class AgentDDPG():
         else:
             epsilon = self.exploration.get_testing()
        
-
         state_t     = torch.from_numpy(self.state).to(self.model_actor.device).unsqueeze(0).float()
 
         action_t    = self.model_actor(state_t)
@@ -82,12 +74,10 @@ class AgentDDPG():
             if self.iterations%self.update_frequency == 0:
                 self.train_model()
 
-            
         if done:
             self.state = self.env.reset()
         else:
             self.state = state_new.copy()
-
 
         self.iterations+= 1
 
@@ -100,32 +90,29 @@ class AgentDDPG():
         reward_t = reward_t.unsqueeze(-1)
         done_t   = (1.0 - done_t).unsqueeze(-1)
 
-        action_next_t = self.model_actor_target.forward(state_next_t).detach()
-        value_next_t = self.model_critic_target.forward(state_next_t, action_next_t).detach()
+        action_next_t   = self.model_actor_target.forward(state_next_t).detach()
+        value_next_t    = self.model_critic_target.forward(state_next_t, action_next_t).detach()
 
         #critic loss
         value_target    = reward_t + self.gamma*done_t*value_next_t
         value_predicted = self.model_critic.forward(state_t, action_t)
 
-        critic_loss = ((value_target - value_predicted)**2)
-        critic_loss = critic_loss.mean()
+        critic_loss     = ((value_target - value_predicted)**2)
+        critic_loss     = critic_loss.mean()
      
         #update critic
         self.optimizer_critic.zero_grad()
         critic_loss.backward() 
         self.optimizer_critic.step()
 
-        
-
         #actor loss
-        actor_loss = -self.model_critic.forward(state_t, self.model_actor.forward(state_t))
-        actor_loss = actor_loss.mean()
+        actor_loss      = -self.model_critic.forward(state_t, self.model_actor.forward(state_t))
+        actor_loss      = actor_loss.mean()
 
         #update actor
         self.optimizer_actor.zero_grad()       
         actor_loss.backward()
         self.optimizer_actor.step()
-
 
         # update target networks 
         for target_param, param in zip(self.model_actor_target.parameters(), self.model_actor.parameters()):
