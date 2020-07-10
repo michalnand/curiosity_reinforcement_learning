@@ -1,6 +1,4 @@
-
-
 cd 2_atari
-python3 ddpg.py
-python3 ddpg_curiosity.py
+python3 pacman_dqn.py
+python3 pacman_dqn_curiosity.py
 cd ..

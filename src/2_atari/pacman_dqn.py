@@ -16,8 +16,8 @@ from common.atari_wrapper import *
 
 path = "models/pacman_dqn/"
 
-env = gym.make("PongNoFrameskip-v4")
-#env = gym.make("MsPacmanNoFrameskip-v4")
+#env = gym.make("PongNoFrameskip-v4")
+env = gym.make("MsPacmanNoFrameskip-v4")
 
 env = AtariWrapper(env)
 env.reset()
