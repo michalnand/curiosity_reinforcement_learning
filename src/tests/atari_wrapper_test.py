@@ -8,7 +8,7 @@ import agents
 
 import common.atari_wrapper
 
-
+from PIL import Image
 
 
 #env = gym.make("PongNoFrameskip-v4")
@@ -25,6 +25,10 @@ obs, _, _, _ = env.step(0)
 
 print(obs)
 print(obs.shape)
+
+
+im = Image.fromarray(obs[0]*255.0)
+im.show()
 
 k = 0.02
 fps = 0

@@ -9,7 +9,7 @@ class SkipEnv(gym.Wrapper):
 
     def step(self, action):
         total_reward = 0.0
-        done = None
+        done = False
         for i in range(self._skip):
             state, reward, done, info = self.env.step(action)
             total_reward+= reward
@@ -39,7 +39,7 @@ class ResizeEnv(gym.ObservationWrapper):
 
         for i in reversed(range(self.frame_stacking-1)):
             self.state[i+1] = self.state[i].copy()
-        self.state[0] = numpy.array(img).astype(self.dtype)/255.0
+        self.state[0] = (numpy.array(img).astype(self.dtype)/255.0).copy()
 
         return self.state
 
@@ -61,7 +61,7 @@ class EpisodicLifeEnv(gym.Wrapper):
         self.lives = 0
         self.was_real_done  = True
 
-    def _step(self, action):
+    def step(self, action):
         obs, reward, done, info = self.env.step(action)
         self.was_real_done = done
         
@@ -75,7 +75,7 @@ class EpisodicLifeEnv(gym.Wrapper):
         self.lives = lives
         return obs, reward, done, info
 
-    def _reset(self, **kwargs):
+    def reset(self, **kwargs):
         if self.was_real_done:
             obs = self.env.reset(**kwargs)
         else:
@@ -84,9 +84,9 @@ class EpisodicLifeEnv(gym.Wrapper):
         self.inital_lives = self.env.unwrapped.ale.lives()
         return obs
 
-class ClipRewardEnv(gym.RewardWrapper):
+class ClipRewardEnv(gym.Wrapper):
     def __init__(self, env):
-        gym.RewardWrapper.__init__(self, env)
+        gym.Wrapper.__init__(self, env)
 
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
@@ -100,5 +100,7 @@ def AtariWrapper(env, height = 96, width = 96, frame_stacking=4, frame_skipping=
     env = FireResetEnv(env) 
     env = EpisodicLifeEnv(env)
     env = ClipRewardEnv(env)
+
+    env.observation_space.shape = (frame_stacking, height, width)
 
     return env
