@@ -33,7 +33,7 @@ class ExperienceBuffer():
             self.state_b.append(state.copy())
             self.action_b.append(int(action))
             self.reward_b.append(reward)
-            self.done_b.append(done_)
+            self.done_b.append(done_) 
         else:
             self.state_b[self.ptr]  = state.copy()
             self.action_b[self.ptr] = int(action)
@@ -74,7 +74,7 @@ class ExperienceBuffer():
             state_next_t[i] = torch.from_numpy(self.state_b[n+1]).to(device)
             done_t[i]       = torch.from_numpy(numpy.asarray(self.done_b[n])).to(device)
 
-        return state_t, action_t, reward_t, state_next_t, done_t
+        return state_t.detach(), action_t, reward_t.detach(), state_next_t.detach(), done_t.detach()
 
 
 if __name__ == "__main__":
