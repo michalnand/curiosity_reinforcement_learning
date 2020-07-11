@@ -18,7 +18,7 @@ from common.Training import *
 path = "models/ddpg_curiosity_sparse/"
 
 class SparseRewards(gym.Wrapper):
-    def __init__(self, env, sparsity = 0.9):
+    def __init__(self, env, sparsity = 0.8):
         gym.Wrapper.__init__(self, env)
         self.sparsity = sparsity
         
