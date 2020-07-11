@@ -16,7 +16,6 @@ class Model(torch.nn.Module):
         self.input_shape    = input_shape
         self.outputs_count  = outputs_count 
         
-        
         self.layers = []
 
         self.layers.append(nn.Conv2d(input_shape[0], features_count, kernel_size=2, stride=1, padding=0))
@@ -40,13 +39,10 @@ class Model(torch.nn.Module):
         self.model = nn.Sequential(*self.layers)
         self.model.to(self.device)
 
-    
         print(self.model)
       
-
     def forward(self, state):
         return self.model(state)
-
 
     def save(self, path):
         name = path + "trained/model_dqn.pt"

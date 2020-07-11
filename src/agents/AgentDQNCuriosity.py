@@ -17,6 +17,7 @@ class AgentDQNCuriosity():
 
         self.exploration    = config.exploration
         self.gamma          = config.gamma
+        self.tau            = config.tau
         self.curiosity_beta = config.curiosity_beta
 
         self.iterations     = 0
@@ -30,7 +31,11 @@ class AgentDQNCuriosity():
         self.experience_replay = ExperienceBuffer(config.experience_replay_size)
 
         self.model_dqn      = ModelDQN.Model(self.state_shape, self.actions_count)
+        self.model_dqn_target   = Model.Model(self.state_shape, self.actions_count)
         self.optimizer_dqn  = torch.optim.Adam(self.model_dqn.parameters(), lr= config.learning_rate)
+
+        for target_param, param in zip(self.model_dqn_target.parameters(), self.model_dqn.parameters()):
+            target_param.data.copy_(param.data)
 
         self.curiosity_module = CuriosityModule(ModelCuriosity, self.state_shape, self.actions_count, config.curiosity_learning_rate, config.curiosity_buffer_size)
 
@@ -91,7 +96,7 @@ class AgentDQNCuriosity():
 
         #q values, state now, state next
         q_predicted      = self.model_dqn.forward(state_t)
-        q_predicted_next = self.model_dqn.forward(state_next_t)
+        q_predicted_next = self.model_dqn_target.forward(state_next_t)
 
         #compute target, Q learning
         q_target         = q_predicted.clone()
@@ -107,7 +112,10 @@ class AgentDQNCuriosity():
             param.grad.data.clamp_(-10.0, 10.0)
         self.optimizer_dqn.step()
 
-
+        # update target network
+        for target_param, param in zip(self.model_dqn_target.parameters(), self.model_dqn.parameters()):
+            target_param.data.copy_((1.0 - self.tau)*target_param.data + self.tau*param.data)
+     
         
     def choose_action_e_greedy(self, q_values, epsilon):
         result = numpy.argmax(q_values)

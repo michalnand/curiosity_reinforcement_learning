@@ -7,14 +7,14 @@ import gym_2048
 import gym
 import numpy
 
-import models.dqn_b.src.model            as Model
-import models.dqn_b.src.config           as Config
+import models.dqn_a.src.model            as Model
+import models.dqn_a.src.config           as Config
 
 
 from common.Training import *
 from common.Game2048Wrapper import *
 
-path = "models/dqn_b/"
+path = "models/dqn_a/"
 
 env = gym.make("2048-v0")
 #env = gym.make("Tiny2048-v0")
@@ -25,8 +25,9 @@ env.reset()
 agent = agents.AgentDQN(env, Model, Config)
 
 
-trainig = TrainingEpisodes(env, agent, episodes_count=200000, episode_max_length=512, saving_path=path, logging_iterations=1000)
+trainig = TrainingEpisodes(env, agent, episodes_count=200000, episode_max_length=2048, saving_path=path, logging_iterations=1000)
 trainig.run()
+
 
 '''
 agent.load(path)

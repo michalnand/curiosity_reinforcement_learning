@@ -12,6 +12,7 @@ class AgentDQN():
         self.batch_size     = config.batch_size
         self.exploration    = config.exploration
         self.gamma          = config.gamma
+        self.tau            = config.tau
         self.update_frequency = config.update_frequency
        
         self.state_shape    = self.env.observation_space.shape
@@ -19,8 +20,13 @@ class AgentDQN():
 
         self.experience_replay = ExperienceBuffer(config.experience_replay_size)
 
-        self.model      = Model.Model(self.state_shape, self.actions_count)
-        self.optimizer  = torch.optim.Adam(self.model.parameters(), lr= config.learning_rate)
+        self.model_target          = Model.Model(self.state_shape, self.actions_count)
+        self.model_target   = Model.Model(self.state_shape, self.actions_count)
+        self.optimizer      = torch.optim.Adam(self.model.parameters(), lr= config.learning_rate)
+
+        for target_param, param in zip(self.model_target.parameters(), self.model.parameters()):
+            target_param.data.copy_(param.data)
+
 
         self.state    = env.reset()
 
@@ -73,7 +79,7 @@ class AgentDQN():
         
         #q values, state now, state next
         q_predicted      = self.model.forward(state_t)
-        q_predicted_next = self.model.forward(state_next_t)
+        q_predicted_next = self.model_target.forward(state_next_t)
 
         #compute target, Q learning
         q_target         = q_predicted.clone()
@@ -89,7 +95,10 @@ class AgentDQN():
             param.grad.data.clamp_(-1.0, 1.0)
         self.optimizer.step()
 
-
+        # update target network
+        for target_param, param in zip(self.model_target.parameters(), self.model.parameters()):
+            target_param.data.copy_((1.0 - self.tau)*target_param.data + self.tau*param.data)
+     
         
     def choose_action_e_greedy(self, q_values, epsilon):
         result = numpy.argmax(q_values)
