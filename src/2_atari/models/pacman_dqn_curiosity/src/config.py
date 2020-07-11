@@ -4,6 +4,7 @@ class Config():
 
     def __init__(self):
         self.gamma = 0.99
+        self.tau   = 0.001
 
         self.update_frequency = 4
 
