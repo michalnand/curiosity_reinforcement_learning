@@ -1,6 +1,7 @@
 from .ExperienceBuffer import *
 
 from .AgentRandom import *
+from .AgentRandomContinuous import *
 
 
 from .AgentA2C import *

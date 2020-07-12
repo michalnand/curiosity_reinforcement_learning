@@ -3,7 +3,7 @@ import torch.nn as nn
 
 class Model(torch.nn.Module):
 
-    def __init__(self, input_shape, outputs_count, hidden_count = 128):
+    def __init__(self, input_shape, outputs_count, hidden_count = 256):
         super(Model, self).__init__()
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -11,17 +11,17 @@ class Model(torch.nn.Module):
         self.model_features = nn.Sequential(
                                             nn.Linear(input_shape[0] + outputs_count, hidden_count),
                                             nn.ReLU(),
-                                            nn.Linear(hidden_count, hidden_count),
-                                            nn.ReLU()
         )
 
 
-        self.model_state = nn.Sequential(
-                                            nn.Linear(hidden_count, input_shape[0])
+        self.model_state = nn.Sequential(   nn.Linear(hidden_count, hidden_count//2),
+                                            nn.ReLU(),
+                                            nn.Linear(hidden_count//2, input_shape[0])
         )
 
-        self.model_reward = nn.Sequential(
-                                            nn.Linear(hidden_count, 1)
+        self.model_reward = nn.Sequential(  nn.Linear(hidden_count, hidden_count//2),
+                                            nn.ReLU(),
+                                            nn.Linear(hidden_count//2, 1)
         ) 
 
 

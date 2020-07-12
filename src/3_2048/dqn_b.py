@@ -25,10 +25,10 @@ env.reset()
 agent = agents.AgentDQN(env, Model, Config)
 
 
-trainig = TrainingEpisodes(env, agent, episodes_count=200000, episode_max_length=2048, saving_path=path, logging_iterations=1000)
-trainig.run()
+#trainig = TrainingEpisodes(env, agent, episodes_count=200000, episode_max_length=2048, saving_path=path, logging_iterations=1000)
+#trainig.run()
 
-'''
+
 agent.load(path)
 
 
@@ -41,4 +41,3 @@ while True:
         print(env.stats)
         print(env.stats_norm)
         print("\n")
-'''
