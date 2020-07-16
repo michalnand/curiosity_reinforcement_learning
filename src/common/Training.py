@@ -1,6 +1,6 @@
 import numpy
 from .TrainingLog import *
-
+import time
 
 class TrainingEpisodes:
     def __init__(self, env, agent, episodes_count, episode_max_length, saving_path, logging_iterations = 10000):

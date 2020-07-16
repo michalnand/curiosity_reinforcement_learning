@@ -3,7 +3,7 @@ import common.decay
 class Config():
 
     def __init__(self):        
-        self.gamma          = 0.99
+        self.gamma          = 0.9
         self.critic_learning_rate = 0.0002
         self.actor_learning_rate  = 0.0001
         self.tau = 0.001
@@ -17,5 +17,5 @@ class Config():
 
         
         self.curiosity_beta = 0.1
-        self.curiosity_learning_rate = 0.0001 
+        self.curiosity_learning_rate = 0.0001
         self.curiosity_buffer_size = 4096

@@ -106,9 +106,8 @@ class AgentDDPGCuriosity():
         state_t, action_t, reward_t, state_next_t, done_t = self.experience_replay.sample(self.batch_size, self.model_critic.device)
         
         curiosity_t, _  = self.curiosity_module.eval(state_t, state_next_t, action_t)
-        curiosity_t  = torch.clamp(self.curiosity_beta*curiosity_t, 0.0, 1.0)   
+        curiosity_t  = self.curiosity_beta*curiosity_t
         curiosity_t  = curiosity_t.unsqueeze(-1)
-
 
         action_next_t = self.model_actor_target.forward(state_next_t)
         q_predicted_next = self.model_critic_target.forward(state_next_t, action_next_t).detach()
