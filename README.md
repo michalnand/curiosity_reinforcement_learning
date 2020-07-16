@@ -18,7 +18,7 @@ some experiments with curiosity learning
 
 ![](images/and.gif)
 
-![](src/1_ant/results/training_score_per_episode.png
+![](src/1_ant/results/training_score_per_episode.png)
 
 * DDPG - common ddpg
 * DDPG + curiosity - simple environment forward model added
