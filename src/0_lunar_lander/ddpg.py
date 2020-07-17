@@ -34,11 +34,8 @@ agent = agents.AgentDDPG(env, ModelCritic, ModelActor, Config)
 trainig = TrainingEpisodes(env, agent, episodes_count=4000, episode_max_length=1000, saving_path=path, logging_iterations=1000)
 trainig.run()
 
-
 '''
 agent.load(path)
-
-
 agent.disable_training()
 agent.iterations = 0
 while True:

@@ -10,17 +10,19 @@ class Model(torch.nn.Module):
          
         self.model_features = nn.Sequential(
                                             nn.Linear(input_shape[0] + outputs_count, hidden_count),
-                                            nn.ReLU(),
-                                            nn.Linear(hidden_count, hidden_count),
-                                            nn.ReLU()
+                                            nn.ReLU()                                  
         )
 
 
         self.model_state = nn.Sequential(
+                                            nn.Linear(hidden_count, hidden_count),
+                                            nn.ReLU(),
                                             nn.Linear(hidden_count, input_shape[0])
         )
 
         self.model_reward = nn.Sequential(
+                                            nn.Linear(hidden_count, hidden_count),
+                                            nn.ReLU(),
                                             nn.Linear(hidden_count, 1)
         ) 
 

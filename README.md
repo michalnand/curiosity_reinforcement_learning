@@ -5,13 +5,8 @@ some experiments with curiosity learning
 
 # lunar lander results
 
-![](images/lunar_lander_ppo.gif)
 
-![](results/training_score_per_iterations.png)
-![](results/training_score_per_episode.png)
-
-* note : A2C was running in 8 paralel environments, total number of iterations (games) need to be multiplied by 8
-
+![](src/0_lunar_lander/results/training_score_per_episode.png)
 
 
 # ANT  results
@@ -23,3 +18,6 @@ some experiments with curiosity learning
 * DDPG : common ddpg
 * DDPG + curiosity : simple environment forward model added
 * DDPG + multihead curiosity : multiple environment forward models, controlled by attention mechanism
+
+# multihead curiosity beast :
+![](images/graph.png)

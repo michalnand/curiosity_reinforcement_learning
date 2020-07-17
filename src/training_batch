@@ -1,9 +1,5 @@
 cd 2_atari
 python3 pacman_dqn.py
 python3 pacman_dqn_curiosity.py
+python3 pacman_dqn_curiosity_multihead.py
 cd ..
-
-#cd 3_2048
-#python3 dqn_a.py
-#python3 dqn_b.py
-#cd ..

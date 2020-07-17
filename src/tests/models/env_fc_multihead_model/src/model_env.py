@@ -106,7 +106,6 @@ class Model(torch.nn.Module):
         heads_output_state  = torch.zeros((self.n_heads, batch_size) + self.input_shape)
         heads_output_reward = torch.zeros((self.n_heads, batch_size, 1))
 
-        i = 1
         for i in range(self.n_heads):            
             heads_output_state[i], heads_output_reward[i] = self.curiosity_heads[i].forward(x)
 
@@ -124,10 +123,17 @@ class Model(torch.nn.Module):
         return state_predicted + state.detach(), reward_predicted
 
     def save(self, path):
-        torch.save(self.model_attention.state_dict(), path + "model_attention.pt")
+        torch.save(self.model_attention.state_dict(), path + "trained/model_curiosity_attention.pt")
+        for i in range(self.n_heads):
+            torch.save(self.curiosity_heads[i].state_dict(), path + "trained/model_curiosity_head_" + str(i) + ".pt")
+
         
 
     def load(self, path):       
-        self.model_attention.load_state_dict(torch.load(path + "model_attention.pt", map_location = self.device))
+        self.model_attention.load_state_dict(torch.load(path + "trained/model_curiosity_attention.pt", map_location = self.device))
         self.model_attention.eval() 
+
+        for i in range(self.n_heads):
+            self.curiosity_heads[i].load_state_dict(torch.load(path + "trained/model_curiosity_head_" + str(i) + ".pt", map_location = self.device))
+            self.curiosity_heads[i].eval()
         
