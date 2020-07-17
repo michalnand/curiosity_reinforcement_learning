@@ -158,6 +158,7 @@ class Model(torch.nn.Module):
 
 
         self.model_attention.to(self.device)
+
         print(self.model_attention)
         print("\n\n\n")
 
@@ -169,8 +170,8 @@ class Model(torch.nn.Module):
     
         attention = self.model_attention.forward(x)
        
-        heads_output_state  = torch.zeros((self.n_heads, batch_size) + self.input_shape)
-        heads_output_reward = torch.zeros((self.n_heads, batch_size, 1))
+        heads_output_state  = torch.zeros((self.n_heads, batch_size) + self.input_shape).to(self.device)
+        heads_output_reward = torch.zeros((self.n_heads, batch_size, 1)).to(self.device)
 
         for i in range(self.n_heads):            
             heads_output_state[i], heads_output_reward[i] = self.curiosity_heads[i].forward(x)
