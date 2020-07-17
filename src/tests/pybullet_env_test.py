@@ -11,11 +11,14 @@ import agents
 
 
 
-env = gym.make("AntPyBulletEnv-v0")
+#env = gym.make("AntPyBulletEnv-v0")
+env = gym.make("HalfCheetahPyBulletEnv-v0")
 #env = gym.make("MinitaurBulletEnv-v0")
 
 env.render()
-env.reset()
+state = env.reset()
+
+print(state.shape)
 
 
  
@@ -27,3 +30,6 @@ while True:
     reward, done = agent.main()
     env.render()
     time.sleep(0.01)
+
+    if done:
+        env.reset()
