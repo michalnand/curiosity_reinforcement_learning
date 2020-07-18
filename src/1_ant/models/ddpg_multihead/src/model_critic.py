@@ -97,9 +97,8 @@ class Model(torch.nn.Module):
             heads_output[i] = self.heads[i].forward(x)
 
         heads_output  = heads_output.transpose(0, 1)
-        print(attention.shape, heads_output.shape)
 
-        attention = attention.unsqueeze(-1) #.repeat((1, 1, ) + self.input_shape)
+        attention = attention.unsqueeze(-1) 
 
         result = torch.sum(attention*heads_output, dim = 1)
 
