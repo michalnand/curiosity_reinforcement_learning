@@ -65,7 +65,6 @@ class ExperienceBuffer():
         state_next_t    = torch.zeros(state_shape,  dtype=torch.float32).to(device)
         done_t          = torch.zeros(done_shape,  dtype=torch.float32).to(device)
 
-        
         for i in range(0, batch_size):
             n  = numpy.random.randint(self.length() - 1)
             state_t[i]      = torch.from_numpy(self.state_b[n]).to(device)
@@ -74,6 +73,7 @@ class ExperienceBuffer():
             state_next_t[i] = torch.from_numpy(self.state_b[n+1]).to(device)
             done_t[i]       = torch.from_numpy(numpy.asarray(self.done_b[n])).to(device)
 
+          
         return state_t.detach(), action_t, reward_t.detach(), state_next_t.detach(), done_t.detach()
 
 
