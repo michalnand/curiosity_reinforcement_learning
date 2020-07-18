@@ -46,7 +46,7 @@ class TrainingLog:
         if done:
             self.episodes+= 1
 
-            k = 0.1
+            k = 0.02
             self.episode_iterations_filtered = (1.0 - k)*self.episode_iterations_filtered + k*self.episode_iterations
             self.episode_score_sum_filtered = (1.0 - k)*self.episode_score_sum_filtered + k*self.episode_score_sum
             
