@@ -19,5 +19,5 @@ from .AgentPPOContinuous import *
 
 from .AgentDDPG import *
 from .AgentDDPGCuriosity import *
-
+from .AgentSDPG import *
 
