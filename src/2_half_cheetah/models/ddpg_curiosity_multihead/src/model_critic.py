@@ -5,11 +5,12 @@ from torchviz import make_dot
 
 class CriticHead(torch.nn.Module):
 
-    def __init__(self, input_shape, outputs_count, hidden_count = 256):
+    def __init__(self, input_shape, outputs_count, hidden_count = 128):
         super(CriticHead, self).__init__()
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        
+        #self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")        
+        self.device = "cpu"
+
         self.layers = [ 
                         nn.Linear(input_shape[0] + outputs_count, hidden_count),
                         nn.ReLU(),
@@ -56,10 +57,11 @@ class ListModules(nn.Module):
 
 class Model(torch.nn.Module):
 
-    def __init__(self, input_shape, outputs_count, hidden_count = 256, n_heads = 4):
+    def __init__(self, input_shape, outputs_count, hidden_count = 128, n_heads = 4):
         super(Model, self).__init__()
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        #self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")        
+        self.device = "cpu"
 
         self.n_heads = n_heads
 
@@ -126,7 +128,7 @@ if __name__ == "__main__":
     input_shape     = (26, )
     actions_count   = 5
 
-    model = Model(input_shape, actions_count, hidden_count=256, n_heads = 4)
+    model = Model(input_shape, actions_count, hidden_count=128, n_heads = 4)
 
     state       = torch.randn(batch_size, input_shape[0])
     action      = torch.randn(batch_size, actions_count)

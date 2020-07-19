@@ -1,5 +1,11 @@
-cd 2_atari
-python3 pacman_dqn.py
-python3 pacman_dqn_curiosity.py
-python3 pacman_dqn_curiosity_multihead.py
+cd 2_half_cheetah
+./training_batch
+cd ..
+
+cd 3_atari
+./training_batch
+cd ..
+
+cd 4_super_mario
+./training_batch
 cd ..
