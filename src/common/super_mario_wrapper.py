@@ -5,6 +5,21 @@ from PIL import Image
 from nes_py.wrappers import JoypadSpace
 from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 
+class NopOpsEnv(gym.Wrapper):
+    def __init__(self, env=None, max_count=30):
+        super(NopOpsEnv, self).__init__(env)
+        self.max_count = max_count
+
+    def reset(self):
+        self.env.reset()
+
+        noops = numpy.random.randint(1, self.max_count + 1)
+         
+        for _ in range(noops):
+            obs, _, _, _ = self.env.step(0)
+            
+        return obs
+
 
 class SkipEnv(gym.Wrapper):
     def __init__(self, env, skip = 4):
@@ -109,6 +124,7 @@ class ClipRewardEnv(gym.RewardWrapper):
 
 def SuperMarioWrapper(env, height = 96, width = 96, frame_stacking=4, frame_skipping=4):
     env = JoypadSpace(env, SIMPLE_MOVEMENT)
+    env = NopOpsEnv(env)
     env = SkipEnv(env, frame_skipping)
     env = ResizeEnv(env, height, width, frame_stacking)
     env = FireResetEnv(env) 

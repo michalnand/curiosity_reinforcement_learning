@@ -28,8 +28,9 @@ env = LunarLanderWrapper(env)
 
 agent = agents.AgentDQN(env, Model, Config)
 
-#trainig = TrainingEpisodes(env, agent, episodes_count=4000, episode_max_length=1000, saving_path=path, logging_iterations=1000)
+#trainig = TrainingEpisodes(env, agent, episodes_count=2500, episode_max_length=1000, saving_path=path, logging_iterations=1000)
 #trainig.run()
+
 
 agent.load(path)
 

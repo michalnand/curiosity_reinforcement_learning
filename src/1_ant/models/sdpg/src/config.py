@@ -10,8 +10,8 @@ class Config():
 
         self.batch_size             = 64
         self.update_frequency       = 4
-        self.sample_size            = 16
+        self.sample_size            = 8
 
         self.exploration   = common.decay.Linear(1000000, 1.0, 0.2, 0.2)
 
-        self.experience_replay_size = 256 #16384
+        self.experience_replay_size = 16384

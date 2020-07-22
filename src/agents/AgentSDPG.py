@@ -95,10 +95,10 @@ class AgentSDPG():
         value_target    = torch.zeros(self.sample_size, self.batch_size, 1).to(self.model_critic.device)
         value_predicted = torch.zeros(self.sample_size, self.batch_size, 1).to(self.model_critic.device)
 
-        actor_loss = 0.0
         for j in range(self.sample_size):
-            state_noised        = state_t.clone()       + torch.randn(state_t.shape)
-            state_next_noise_t  = state_next_t.clone()  + torch.randn(state_t.shape)
+            std = 0.1
+            state_noised        = state_t.clone()       + std*torch.randn(state_t.shape)
+            state_next_noise_t  = state_next_t.clone()  + std*torch.randn(state_t.shape)
 
             action_next_t   = self.model_actor_target.forward(state_next_noise_t).detach()
             value_next_t    = self.model_critic_target.forward(state_next_noise_t, action_next_t).detach()
@@ -107,20 +107,22 @@ class AgentSDPG():
             value_target[j]    = reward_t + self.gamma*done_t*value_next_t
             value_predicted[j] = self.model_critic.forward(state_noised, action_t)
 
-            #actor loss
-            actor_loss+= -self.model_critic.forward(state_noised, self.model_actor.forward(state_noised))
-
-
+        #wasserstein optimal transport loss - approximaiton, eq 12
+        value_target, _    = torch.sort(value_target, 1)
         value_predicted, _ = torch.sort(value_predicted, 1)
-
-        value_target    = value_target.transpose(0, 1)
-        value_predicted = value_predicted.transpose(0, 1)
-        
-
-        critic_loss     = ((value_target - value_predicted.transpose(1, 2))**2)
-     
+        #compute loss, pairwise matrix
+        critic_loss     = ((value_target - value_predicted)**2) 
         critic_loss     = critic_loss.mean()
 
+        '''
+        #wasserstein optimal transport loss
+        value_target        = value_target.transpose(0, 1)          #switch shape (sample, batch, 1) to (batch, sample, 1)
+        value_predicted     = value_predicted.transpose(0, 1)       #switch shape (sample, batch, 1) to (batch, sample, 1)
+        value_predicted, _  = torch.sort(value_predicted, 1)     #sort predicted values over sample exis, ascending
+        #compute loss, pairwise matrix
+        critic_loss     = ((value_target - value_predicted.transpose(1, 2))**2) 
+        critic_loss     = critic_loss.mean()
+        '''
 
         #update critic
         self.optimizer_critic.zero_grad()

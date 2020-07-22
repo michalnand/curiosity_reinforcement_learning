@@ -14,11 +14,17 @@ class AgentDQN():
         self.gamma          = config.gamma
         self.tau            = config.tau
         self.update_frequency = config.update_frequency
+
+        if hasattr(config, 'bellman_steps'):
+            self.bellman_steps = config.bellman_steps
+        else:
+            self.bellman_steps = 1
+
        
         self.state_shape    = self.env.observation_space.shape
         self.actions_count  = self.env.action_space.n
 
-        self.experience_replay = ExperienceBuffer(config.experience_replay_size)
+        self.experience_replay = ExperienceBuffer(config.experience_replay_size, self.bellman_steps)
 
         self.model          = Model.Model(self.state_shape, self.actions_count)
         self.model_target   = Model.Model(self.state_shape, self.actions_count)
@@ -73,7 +79,7 @@ class AgentDQN():
 
         return self.reward, done
         
-        
+    '''
     def train_model(self):
         state_t, action_t, reward_t, state_next_t, done_t = self.experience_replay.sample(self.batch_size, self.model.device)
         
@@ -86,6 +92,40 @@ class AgentDQN():
         for i in range(self.batch_size):
             action_idx    = action_t[i]
             q_target[i][action_idx]   = reward_t[i] + self.gamma*torch.max(q_predicted_next[i])*(1 - done_t[i])
+
+        #train DQN model
+        loss = ((q_target.detach() - q_predicted)**2).mean() 
+        self.optimizer.zero_grad()
+        loss.backward()
+        for param in self.model.parameters():
+            param.grad.data.clamp_(-1.0, 1.0)
+        self.optimizer.step()
+
+        # update target network
+        for target_param, param in zip(self.model_target.parameters(), self.model.parameters()):
+            target_param.data.copy_((1.0 - self.tau)*target_param.data + self.tau*param.data)
+    '''
+    
+    def train_model(self):
+        state_t, action_t, reward_t, state_next_t, done_t = self.experience_replay.sample(self.batch_size, self.model.device)
+        
+        #q values, state now, state next
+        q_predicted      = self.model.forward(state_t)
+        q_predicted_next = self.model_target.forward(state_next_t)
+
+        #compute target, Q learning
+        q_target         = q_predicted.clone()
+        for i in range(self.batch_size):
+            gamma_        = self.gamma
+
+            reward_sum = 0.0
+            for j in range(self.bellman_steps):
+                if done_t[j][i]:
+                    gamma_ = 0.0
+                reward_sum+= reward_t[j][i]*(gamma_**j)
+
+            action_idx    = action_t[i]
+            q_target[i][action_idx]   = reward_sum + gamma_*torch.max(q_predicted_next[i])
 
         #train DQN model
         loss = ((q_target.detach() - q_predicted)**2).mean() 

@@ -8,6 +8,21 @@ class Flatten(nn.Module):
     def forward(self, input):
         return input.view(input.size(0), -1)
 
+class NoiseLayer(torch.nn.Module):
+    def __init__(self, inputs_count, init_range = 0.1):
+        super(NoiseLayer, self).__init__()
+        
+        self.inputs_count   = inputs_count
+        self.device         = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        w_initial   = init_range*torch.rand(self.inputs_count, device = self.device)
+        
+        self.w      = torch.nn.Parameter(w_initial, requires_grad = True)     
+        self.distribution = torch.distributions.normal.Normal(0.0, 1.0)
+ 
+    def forward(self, x):
+        noise =  self.distribution.sample((self.inputs_count, )).detach().to(self.device)
+        return x + self.w*noise
 
 
 class Head(torch.nn.Module):
@@ -17,17 +32,31 @@ class Head(torch.nn.Module):
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        self.model = nn.Sequential(
-                                    nn.Linear(inputs_count, fc_count),
-                                    nn.ReLU(),
-                                    nn.Linear(fc_count, outputs_count)
+
+        self.model_value = nn.Sequential(
+                                            nn.Linear(inputs_count, 128),
+                                            nn.ReLU(),                      
+                                            nn.Linear(128, 1) 
         )
 
-        self.model.to(self.device)
-        print(self.model, "\n")
+        self.model_advantage = nn.Sequential(
+                                                nn.Linear(inputs_count, 128),
+                                                nn.ReLU(),                      
+                                                nn.Linear(128, outputs_count)
+        )
+
+        self.model_value.to(self.device)
+        self.model_advantage.to(self.device)
+
+        print(self.model_value, "\n")
+        print(self.model_advantage, "\n")
 
     def forward(self, input):
-        return self.model(input)
+        value       = self.model_value(input)
+        advantage   = self.model_advantage(input)
+
+        result = value + advantage - advantage.mean()
+        return result
 
 class ListModules(nn.Module):
     def __init__(self, *args):
@@ -57,14 +86,18 @@ class Model(torch.nn.Module):
         super(Model, self).__init__()
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        self.input_shape = input_shape
         self.n_heads = n_heads
         self.outputs_count = outputs_count
         
-        input_channels  = input_shape[0]
-        fc_input_height = input_shape[1]//16
-        fc_input_width  = input_shape[2]//16
-        fc_inputs_count = 64*fc_input_height*fc_input_width
+        input_channels  = self.input_shape[0]
+        fc_input_height = self.input_shape[1]
+        fc_input_width  = self.input_shape[2]    
 
+        ratio           = 2**4
+        fc_inputs_count = 64*((fc_input_width)//ratio)*((fc_input_height)//ratio)
+ 
 
         self.model_features = nn.Sequential(
                                             nn.Conv2d(input_channels, 32, kernel_size=3, stride=1, padding=1),
@@ -82,8 +115,9 @@ class Model(torch.nn.Module):
                                             nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
                                             nn.ReLU(),
                                             nn.MaxPool2d(kernel_size=2, stride=2, padding=0),
-
-                                            Flatten()
+                                            
+                                            Flatten(),
+                                            NoiseLayer(fc_inputs_count, 0.001)
         )
                       
         self.model_attention = nn.Sequential( 
@@ -156,3 +190,4 @@ if __name__ == "__main__":
     q_values = model.forward(state)
     
     make_dot(q_values).render("graph", format="png")
+
