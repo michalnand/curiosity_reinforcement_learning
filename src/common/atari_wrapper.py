@@ -106,12 +106,15 @@ class ClipRewardEnv(gym.Wrapper):
 
         self.raw_score_per_episode   = 0.0
         self.raw_score_per_iteration = 0.0
+        self.raw_reward              = 0.0
         self.raw_reward_episode_sum  = 0.0
 
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
 
         self.raw_reward_episode_sum+= reward
+
+        self.raw_reward = reward
 
 
         k = 0.01

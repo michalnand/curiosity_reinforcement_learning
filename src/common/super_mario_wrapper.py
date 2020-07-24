@@ -103,23 +103,41 @@ class EpisodicLifeEnv(gym.Wrapper):
         self.inital_lives = self.env.unwrapped.ale.lives()
         return obs
 
-class ClipRewardEnv(gym.RewardWrapper):
+
+class ClipRewardEnv(gym.Wrapper):
     def __init__(self, env):
-        gym.RewardWrapper.__init__(self, env)
+        gym.Wrapper.__init__(self, env)
+
+        self.raw_score_per_episode   = 0.0
+        self.raw_score_per_iteration = 0.0
+        self.raw_reward              = 0.0
+        self.raw_reward_episode_sum  = 0.0
 
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
 
+        self.raw_reward_episode_sum+= reward
+        self.raw_reward = reward
+
+        k = 0.01
+        self.raw_score_per_iteration = (1.0 - k)*self.raw_score_per_iteration + k*reward
+
         if done:
+            k = 0.05
+            self.raw_score_per_episode   = (1.0 - k)*self.raw_score_per_episode + k*self.raw_reward_episode_sum
+            self.raw_reward_episode_sum  = 0.0
+
             if info["flag_get"]:
                 reward+= 50.0
             else:
                 reward+= -50.0
  
         reward = reward/10.0 
-        
+
         reward = numpy.clip(reward, -1.0, 1.0)
         return obs, reward, done, info
+
+
 
 
 def SuperMarioWrapper(env, height = 96, width = 96, frame_stacking=4, frame_skipping=4):

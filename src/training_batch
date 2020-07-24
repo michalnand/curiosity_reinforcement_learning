@@ -1,7 +1,3 @@
-cd 2_half_cheetah
-./training_batch
-cd ..
-
 cd 3_atari
 ./training_batch
 cd ..

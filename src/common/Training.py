@@ -22,7 +22,11 @@ class TrainingEpisodes:
 
             for i in range(self.episode_max_length):
                 reward, done = self.agent.main()
-                log.add(reward, done)
+
+                raw_reward = 0.0
+                if hasattr(self.env, "raw_reward"):
+                    raw_reward = self.env.raw_reward
+                log.add(reward, done, raw_reward)
 
                 if log.is_best:
                     new_best = True
@@ -59,7 +63,11 @@ class TrainingIterations:
 
         for iteration in range(self.iterations_count):
             reward, done = self.agent.main()
-            log.add(reward, done)
+            
+            raw_reward = 0.0
+            if hasattr(self.env, "raw_reward"):
+                raw_reward = self.env.raw_reward
+            log.add(reward, done, raw_reward)
             
             if log.is_best:
                 new_best = True
