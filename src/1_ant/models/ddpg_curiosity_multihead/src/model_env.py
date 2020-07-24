@@ -6,7 +6,7 @@ class CuriosityHead(torch.nn.Module):
     def __init__(self, input_shape, outputs_count, hidden_count = 128):
         super(CuriosityHead, self).__init__()
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = "cpu" #torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
 
         self.model_features = nn.Sequential(
@@ -71,7 +71,7 @@ class Model(torch.nn.Module):
     def __init__(self, input_shape, outputs_count, hidden_count = 128, n_heads = 4):
         super(Model, self).__init__()
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = "cpu" #torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.n_heads = n_heads
 

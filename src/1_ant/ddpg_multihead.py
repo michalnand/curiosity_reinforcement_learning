@@ -21,7 +21,7 @@ env = gym.make("AntPyBulletEnv-v0")
 
 agent = agents.AgentDDPG(env, ModelCritic, ModelActor, Config)
 
-max_iterations = 2*(10**6)
+max_iterations = 10**6
 trainig = TrainingIterations(env, agent, max_iterations, path, 1000)
 trainig.run() 
 
