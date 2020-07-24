@@ -22,10 +22,10 @@ env = gym.make("HalfCheetahPyBulletEnv-v0")
 
 agent = agents.AgentDDPGCuriosity(env, ModelCritic, ModelActor, ModelEnv, Config)
 
-max_iterations = 5000000
+max_iterations = 6000000
 trainig = TrainingIterations(env, agent, max_iterations, path, 10000)
 trainig.run()
-
+ 
 '''
 agent.load(path)
 agent.disable_training()

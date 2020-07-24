@@ -20,6 +20,12 @@ class AgentDQNCuriosity():
         self.tau            = config.tau
         self.curiosity_beta = config.curiosity_beta
 
+        if hasattr(config, 'bellman_steps'):
+            self.bellman_steps = config.bellman_steps
+        else:
+            self.bellman_steps = 1
+
+
         self.iterations     = 0
 
         self.update_frequency = config.update_frequency
@@ -28,7 +34,7 @@ class AgentDQNCuriosity():
         self.state_shape    = self.env.observation_space.shape
         self.actions_count  = self.env.action_space.n
 
-        self.experience_replay = ExperienceBuffer(config.experience_replay_size)
+        self.experience_replay = ExperienceBuffer(config.experience_replay_size, self.bellman_steps)
 
         self.model_dqn          = ModelDQN.Model(self.state_shape, self.actions_count)
         self.model_dqn_target   = ModelDQN.Model(self.state_shape, self.actions_count)
@@ -85,7 +91,7 @@ class AgentDQNCuriosity():
         self.iterations+= 1
         return self.reward, done
         
-        
+    '''    
     def train_model(self):
         state_t, action_t, reward_t, state_next_t, done_t = self.experience_replay.sample(self.batch_size, self.model_dqn.device)            
 
@@ -115,7 +121,45 @@ class AgentDQNCuriosity():
         # update target network
         for target_param, param in zip(self.model_dqn_target.parameters(), self.model_dqn.parameters()):
             target_param.data.copy_((1.0 - self.tau)*target_param.data + self.tau*param.data)
-     
+    '''
+
+    def train_model(self):
+        state_t, action_t, reward_t, state_next_t, done_t = self.experience_replay.sample(self.batch_size, self.model_dqn.device)            
+
+        #compute curiosity
+        curiosity_t, _  = self.curiosity_module.eval(state_t, state_next_t, action_t)
+        curiosity_t  = torch.clamp(self.curiosity_beta*curiosity_t, 0.0, 1.0)   
+
+
+        #q values, state now, state next
+        q_predicted      = self.model_dqn.forward(state_t)
+        q_predicted_next = self.model_dqn_target.forward(state_next_t)
+
+        #compute target, n-step Q-learning
+        q_target         = q_predicted.clone()
+        for i in range(self.batch_size):
+            gamma_        = self.gamma
+
+            reward_sum = 0.0
+            for j in range(self.bellman_steps):
+                if done_t[j][i]:
+                    gamma_ = 0.0
+                reward_sum+= reward_t[j][i]*(gamma_**j)
+
+            action_idx    = action_t[i]
+            q_target[i][action_idx]   = curiosity_t[i] + reward_sum + gamma_*torch.max(q_predicted_next[i])
+
+        #train DQN model
+        loss = ((q_target.detach() - q_predicted)**2).mean() 
+        self.optimizer_dqn.zero_grad()
+        loss.backward()
+        for param in self.model_dqn.parameters():
+            param.grad.data.clamp_(-10.0, 10.0)
+        self.optimizer_dqn.step()
+
+        # update target network
+        for target_param, param in zip(self.model_dqn_target.parameters(), self.model_dqn.parameters()):
+            target_param.data.copy_((1.0 - self.tau)*target_param.data + self.tau*param.data)
         
     def choose_action_e_greedy(self, q_values, epsilon):
         result = numpy.argmax(q_values)

@@ -113,7 +113,7 @@ class AgentDQN():
         q_predicted      = self.model.forward(state_t)
         q_predicted_next = self.model_target.forward(state_next_t)
 
-        #compute target, Q learning
+        #compute target, n-step Q-learning
         q_target         = q_predicted.clone()
         for i in range(self.batch_size):
             gamma_        = self.gamma
