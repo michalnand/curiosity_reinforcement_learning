@@ -5,7 +5,7 @@ class Config():
     def __init__(self):        
         self.gamma                  = 0.9
         self.critic_learning_rate   = 0.001
-        self.actor_learning_rate    = 0.0005
+        self.actor_learning_rate    = 0.0005 
         self.tau                    = 0.001
 
         self.batch_size          = 64
