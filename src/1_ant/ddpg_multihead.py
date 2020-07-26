@@ -17,19 +17,18 @@ from common.Training import *
 path = "models/ddpg_multihead/"
 
 env = gym.make("AntPyBulletEnv-v0")
-#env.render()
+env.render()
 
 agent = agents.AgentDDPG(env, ModelCritic, ModelActor, Config)
 
 max_iterations = 10**6
-trainig = TrainingIterations(env, agent, max_iterations, path, 1000)
-trainig.run() 
+#trainig = TrainingIterations(env, agent, max_iterations, path, 1000)
+#trainig.run() 
 
-'''
+
 agent.load(path)
 agent.disable_training()
 while True:
     agent.main()
     env.render()
     time.sleep(0.01)
-'''

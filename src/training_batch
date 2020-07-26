@@ -1,11 +1,11 @@
-cd 3_atari
+cd 4_atari
 ./training_batch
 cd ..
 
-cd 4_super_mario
+cd 5_super_mario
 ./training_batch
 cd ..
 
-cd 5_2048
+cd 6_2048
 ./training_batch
 cd ..
