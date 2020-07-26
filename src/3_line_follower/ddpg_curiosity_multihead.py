@@ -39,5 +39,5 @@ agent.load(path)
 agent.disable_training()
 while True:
     agent.main()
-    env.render()
+    #env.render()
     time.sleep(0.01)

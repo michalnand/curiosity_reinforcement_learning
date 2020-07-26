@@ -2,22 +2,33 @@
 
 some experiments with curiosity learning
 
-
-# lunar lander results
-
-
-![](src/0_lunar_lander/results/training_score_per_episode.png)
+playing with DQN and DDPG, with mutlihead critic or multihead curiosity module
+![](images/graph.png)
 
 
-# ANT  results
+
+# pybullet Ant walking
 
 ![](images/ant.gif)
 
 ![](src/1_ant/results/training_score_per_episode.png)
 
 * DDPG : common ddpg
-* DDPG + curiosity : simple environment forward model added
-* DDPG + multihead curiosity : multiple environment forward models, controlled by attention mechanism
+* DDPG multihead critic : two heads ddpg critic
+* DDPG + curiosity : DDPG with bonus reward from environment forward model as curiosity module
+* DDPG multihead + curiosity : two heads DDPG critic with bonus reward from environment multihead (2) forward model as curiosity module
 
-# multihead curiosity beast :
-![](images/graph.png)
+
+
+
+# Line follower
+
+![](images/line_follower.gif)
+
+![](src/3_line_follower/results/training_score_per_episode.png)
+
+* DDPG : common ddpg
+* DDPG multihead critic : two heads ddpg critic
+* DDPG + curiosity : DDPG with bonus reward from environment forward model as curiosity module
+* DDPG multihead + curiosity : two heads DDPG critic with bonus reward from environment forward model as curiosity module
+
