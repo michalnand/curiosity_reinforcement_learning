@@ -19,5 +19,7 @@ from .AgentPPOContinuous import *
 
 from .AgentDDPG import *
 from .AgentDDPGCuriosity import *
+from .AgentDDPGImagination import *
 from .AgentSDPG import *
+
 

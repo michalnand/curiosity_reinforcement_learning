@@ -44,6 +44,7 @@ class AgentDDPGImagination():
         self.optimizer_actor    = torch.optim.Adam(self.model_actor.parameters(), lr= config.actor_learning_rate)
         self.optimizer_critic   = torch.optim.Adam(self.model_critic.parameters(), lr= config.critic_learning_rate, weight_decay=0.0001)
 
+        self.imagination_rollouts = config.imagination_rollouts
         self.imagination_steps  = config.imagination_steps
         self.imagination_module = ImaginationModule(ModelImagination, self.state_shape, self.actions_count, config.imagination_learning_rate, config.imagination_buffer_size, True)
 
@@ -61,6 +62,9 @@ class AgentDDPGImagination():
     
 
     def main(self):
+        
+        if self.enabled_training:
+            self.exploration.process()
 
         state_t     = torch.from_numpy(self.state).to(self.model_actor.device).unsqueeze(0).float()
         action_t = self._sample_action(state_t)
@@ -70,8 +74,10 @@ class AgentDDPGImagination():
         state_new, self.reward, done, self.info = self.env.step(action)
 
         if self.enabled_training:
-            self.imagination_module.add(self.state, action, reward, done)
-            self.sample_imagination(self.state)
+            self.imagination_module.add(self.state, action, self.reward, done)
+            
+            reward_sum = self.sample_imagination(self.state)
+            self.experience_replay.add(self.state, action, self.reward + reward_sum, done)
 
         if self.enabled_training and self.iterations%self.update_frequency == 0:
             self.imagination_module.train()
@@ -90,64 +96,55 @@ class AgentDDPGImagination():
         return self.reward, done
 
     def sample_imagination(self, state_initial):
+        
+        reward_sum = 0.0
+        for m in range(self.imagination_rollouts):
+            state_t     = torch.from_numpy(state_initial).to(self.model_actor.device).unsqueeze(0).float()
 
-        state_t     = torch.from_numpy(state_initial).to(self.model_actor.device).unsqueeze(0).float()
+            for n in range(self.imagination_steps):           
+                action_t = self._sample_action(state_t)
 
-        for n in range(self.imagination_steps):
+                state_next_t, reward = self.imagination_module.eval(state_t, action_t)
+                reward      =  reward.squeeze(0).detach().to("cpu").numpy()
 
-            action_t = self._sample_action(state_t)
+                state_t = state_next_t.detach().clone()
+                reward_sum+= reward
 
-            state_next_t, reward = self.imagination_module.eval(state_t, action_t)
+        reward_sum = reward_sum/self.imagination_rollouts
 
-            reward =  reward.squeeze(0).detach().to("cpu").numpy()
-            action =  action_t.squeeze(0).detach().to("cpu").numpy()
-
-            self.experience_replay.add(state_t.detach().to("cpu").numpy()[0], action, reward, False)
-
-            state_t = state_next_t.detach().clone()
+        return reward_sum
 
             
         
     def train_model(self):
         state_t, action_t, reward_t, state_next_t, done_t = self.experience_replay.sample(self.batch_size, self.model_critic.device)
         
-        curiosity_t, _  = self.imagination_module.eval(state_t, state_next_t, action_t)
-        curiosity_t  = self.curiosity_beta*curiosity_t
-        curiosity_t  = curiosity_t.unsqueeze(-1)
-
-        action_next_t = self.model_actor_target.forward(state_next_t)
-        q_predicted_next = self.model_critic_target.forward(state_next_t, action_next_t).detach()
-
-        #critic loss
         reward_t = reward_t.unsqueeze(-1)
         done_t   = (1.0 - done_t).unsqueeze(-1)
 
-        q_target =  curiosity_t + reward_t + self.gamma*done_t*q_predicted_next
+        action_next_t   = self.model_actor_target.forward(state_next_t).detach()
+        value_next_t    = self.model_critic_target.forward(state_next_t, action_next_t).detach()
 
-        #q values, state now, state next
-        q_predicted      = self.model_critic.forward(state_t, action_t)
+        #critic loss
+        value_target    = reward_t + self.gamma*done_t*value_next_t
+        value_predicted = self.model_critic.forward(state_t, action_t)
 
-
-        critic_loss = ((q_target - q_predicted)**2)
-        critic_loss = critic_loss.mean()
-
+        critic_loss     = ((value_target - value_predicted)**2)
+        critic_loss     = critic_loss.mean()
+     
         #update critic
         self.optimizer_critic.zero_grad()
         critic_loss.backward() 
         self.optimizer_critic.step()
 
-
-
-
         #actor loss
-        actor_loss = -self.model_critic.forward(state_t, self.model_actor.forward(state_t))
-        actor_loss = actor_loss.mean()
-        
+        actor_loss      = -self.model_critic.forward(state_t, self.model_actor.forward(state_t))
+        actor_loss      = actor_loss.mean()
+
         #update actor
-        self.optimizer_actor.zero_grad()
+        self.optimizer_actor.zero_grad()       
         actor_loss.backward()
         self.optimizer_actor.step()
-
 
         # update target networks 
         for target_param, param in zip(self.model_actor_target.parameters(), self.model_actor.parameters()):
@@ -155,6 +152,7 @@ class AgentDDPGImagination():
        
         for target_param, param in zip(self.model_critic_target.parameters(), self.model_critic.parameters()):
             target_param.data.copy_((1.0 - self.tau)*target_param.data + self.tau*param.data)
+
 
 
     def save(self, save_path):
@@ -168,19 +166,18 @@ class AgentDDPGImagination():
         self.imagination_module.load(save_path)     
 
 
-    def _sample_action(self, state):
+    def _sample_action(self, state_t):
         
         if self.enabled_training:
-            self.exploration.process()
             epsilon = self.exploration.get()
         else:
             epsilon = self.exploration.get_testing()
        
         action_t    = self.model_actor(state_t)
 
-        noise  = torch.randn(state.shape[0], self.actions_count).to(self.model_actor.device())
+        noise  = torch.randn(state_t.shape[0], self.actions_count).to(self.model_actor.device)
         action_t = action_t + epsilon*noise
-        action_t = torch.clip(action_t, -1.0, 1.0)
+        action_t = torch.clamp(action_t, -1.0, 1.0)
     
 
         return action_t

@@ -24,7 +24,7 @@ plot '../models/ddpg/result/result.log' using 1:4 title 'DDPG'  with lines lc 'b
      '../models/ddpg_multihead/result/result.log' using 1:4 title 'DDPG : multihead critic'  with lines lc 'orange' lw 3, \
      '../models/ddpg_curiosity/result/result.log' using 1:4 title 'DDPG : curiosity'  with lines lc 'green' lw 3, \
      '../models/ddpg_curiosity_multihead/result/result.log' using 1:4 title 'DDPG : multihead critic + curiosity' with lines lc 'red' lw 3, \
-     '../models/sdpg/result/result.log' using 1:4 title 'SDPG' with lines lc 'purple' lw 3 
+     '../models/ddpg_imagination/result/result.log' using 1:4 title 'DDPG : imagination' with lines lc 'purple' lw 3 
 
 
 set xlabel "iterations" 
@@ -35,7 +35,7 @@ plot '../models/ddpg/result/result.log' using 1:($4/$1) title 'DDPG'  with lines
      '../models/ddpg_multihead/result/result.log' using 1:($4/$1) title 'DDPG : multihead critic'  with lines lc 'orange' lw 3, \
      '../models/ddpg_curiosity/result/result.log' using 1:($4/$1) title 'DDPG : curiosity'  with lines lc 'green' lw 3, \
      '../models/ddpg_curiosity_multihead/result/result.log' using 1:($4/$1) title 'DDPG : multihead critic + curiosity' with lines lc 'red' lw 3, \
-     '../models/sdpg/result/result.log' using 1:($4/$1) title 'SDPG' with lines lc 'purple' lw 3
+     '../models/ddpg_imagination/result/result.log' using 1:($4/$1) title 'DDPG : imagination' with lines lc 'purple' lw 3
 
 set xlabel "episodes" 
 set ylabel "score per episode"
@@ -45,4 +45,4 @@ plot '../models/ddpg/result/result.log' using 2:5 title 'DDPG'  with lines lc 'b
      '../models/ddpg_multihead/result/result.log' using 2:5 title 'DDPG : multihead critic'  with lines lc 'orange' lw 3, \
      '../models/ddpg_curiosity/result/result.log' using 2:5 title 'DDPG : curiosity'  with lines lc 'green' lw 3, \
      '../models/ddpg_curiosity_multihead/result/result.log' using 2:5 title 'DDPG : multihead critic + curiosity' with lines lc 'red' lw 3, \
-     '../models/sdpg/result/result.log' using 2:5 title 'SDPG' with lines lc 'purple' lw 3
+     '../models/ddpg_imagination/result/result.log' using 2:5 title 'DDPG : imagination' with lines lc 'purple' lw 3

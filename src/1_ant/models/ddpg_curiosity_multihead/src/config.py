@@ -16,6 +16,6 @@ class Config():
         self.experience_replay_size = 16384
 
         
-        self.curiosity_beta = 0.1
+        self.curiosity_beta = 0.01
         self.curiosity_learning_rate = 0.0001
         self.curiosity_buffer_size = 4069

@@ -54,9 +54,13 @@ class ImaginationModule:
     def eval(self, state, action):
         batch_size = state.shape[0]
         action_t = torch.zeros((batch_size, self.actions_count))
-        action_t[range(batch_size), action] = 1.0
-        action_t.to(self.model.device)
 
+        if self.continuous_actions:
+            action_t = action.clone()
+        else:
+            action_t = torch.zeros((batch_size, self.actions_count))
+            action_t[range(batch_size), action] = 1.0
+        
         state_prediction, reward_prediction = self.model.forward(state, action_t)
 
         state_prediction    = state_prediction.detach()
