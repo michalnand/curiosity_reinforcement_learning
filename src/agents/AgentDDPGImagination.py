@@ -2,12 +2,11 @@ import numpy
 import torch
 from .ExperienceBufferContinuous import *
 
-from .CuriosityModule import *
+from .ImaginationModule import *
 
-import time
 
-class AgentDDPGCuriosity():
-    def __init__(self, env, ModelCritic, ModelActor, ModelCuriosity, Config):
+class AgentDDPGImagination():
+    def __init__(self, env, ModelCritic, ModelActor, ModelImagination, Config):
         self.env = env
 
         config = Config.Config()
@@ -45,8 +44,8 @@ class AgentDDPGCuriosity():
         self.optimizer_actor    = torch.optim.Adam(self.model_actor.parameters(), lr= config.actor_learning_rate)
         self.optimizer_critic   = torch.optim.Adam(self.model_critic.parameters(), lr= config.critic_learning_rate, weight_decay=0.0001)
 
-        self.curiosity_beta   = config.curiosity_beta
-        self.curiosity_module = CuriosityModule(ModelCuriosity, self.state_shape, self.actions_count, config.curiosity_learning_rate, config.curiosity_buffer_size, True)
+        self.imagination_steps  = config.imagination_steps
+        self.imagination_module = ImaginationModule(ModelImagination, self.state_shape, self.actions_count, config.imagination_learning_rate, config.imagination_buffer_size, True)
 
         self.state    = env.reset()
 
@@ -60,40 +59,26 @@ class AgentDDPGCuriosity():
     def disable_training(self):
         self.enabled_training = False
     
+
     def main(self):
-        if self.enabled_training:
-            self.exploration.process()
-            epsilon = self.exploration.get()
-        else:
-            epsilon = self.exploration.get_testing()
-       
 
         state_t     = torch.from_numpy(self.state).to(self.model_actor.device).unsqueeze(0).float()
+        action_t = self._sample_action(state_t)
 
-        action_t    = self.model_actor(state_t)
-        action      = action_t.squeeze(0).detach().to("cpu").numpy()
-
-        noise  = numpy.random.randn(self.actions_count) #self.ornstein_uhlenbeck.sample()
-        action = action + epsilon*noise
-
+        action = action_t.squeeze(0).detach().to("cpu").numpy()
         
-        action = numpy.clip(action, -1.0, 1.0)
-
-
         state_new, self.reward, done, self.info = self.env.step(action)
 
         if self.enabled_training:
-            self.experience_replay.add(self.state, action, self.reward, done)
-            self.curiosity_module.add(self.state, action, self.reward, done)
-            
-        if self.enabled_training and self.iterations%self.update_frequency == 0:
-            self.curiosity_module.train()
-        
+            self.imagination_module.add(self.state, action, reward, done)
+            self.sample_imagination(self.state)
 
+        if self.enabled_training and self.iterations%self.update_frequency == 0:
+            self.imagination_module.train()
+        
         if self.enabled_training and (self.iterations > self.experience_replay.size):
             if self.iterations%self.update_frequency == 0:
                 self.train_model()
-                time.sleep(0.2)
 
         self.state = state_new
             
@@ -103,12 +88,30 @@ class AgentDDPGCuriosity():
         self.iterations+= 1
 
         return self.reward, done
-        
+
+    def sample_imagination(self, state_initial):
+
+        state_t     = torch.from_numpy(state_initial).to(self.model_actor.device).unsqueeze(0).float()
+
+        for n in range(self.imagination_steps):
+
+            action_t = self._sample_action(state_t)
+
+            state_next_t, reward = self.imagination_module.eval(state_t, action_t)
+
+            reward =  reward.squeeze(0).detach().to("cpu").numpy()
+            action =  action_t.squeeze(0).detach().to("cpu").numpy()
+
+            self.experience_replay.add(state_t.detach().to("cpu").numpy()[0], action, reward, False)
+
+            state_t = state_next_t.detach().clone()
+
+            
         
     def train_model(self):
         state_t, action_t, reward_t, state_next_t, done_t = self.experience_replay.sample(self.batch_size, self.model_critic.device)
         
-        curiosity_t, _  = self.curiosity_module.eval(state_t, state_next_t, action_t)
+        curiosity_t, _  = self.imagination_module.eval(state_t, state_next_t, action_t)
         curiosity_t  = self.curiosity_beta*curiosity_t
         curiosity_t  = curiosity_t.unsqueeze(-1)
 
@@ -157,9 +160,27 @@ class AgentDDPGCuriosity():
     def save(self, save_path):
         self.model_critic.save(save_path)
         self.model_actor.save(save_path)
-        self.curiosity_module.save(save_path) 
+        self.imagination_module.save(save_path) 
 
     def load(self, save_path):
         self.model_critic.load(save_path)
         self.model_actor.load(save_path)
-        self.curiosity_module.load(save_path)     
+        self.imagination_module.load(save_path)     
+
+
+    def _sample_action(self, state):
+        
+        if self.enabled_training:
+            self.exploration.process()
+            epsilon = self.exploration.get()
+        else:
+            epsilon = self.exploration.get_testing()
+       
+        action_t    = self.model_actor(state_t)
+
+        noise  = torch.randn(state.shape[0], self.actions_count).to(self.model_actor.device())
+        action_t = action_t + epsilon*noise
+        action_t = torch.clip(action_t, -1.0, 1.0)
+    
+
+        return action_t

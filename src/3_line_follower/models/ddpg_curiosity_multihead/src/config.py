@@ -17,5 +17,5 @@ class Config():
 
         
         self.curiosity_beta             = 0.01
-        self.curiosity_learning_rate    = 0.001
-        self.curiosity_buffer_size      = 4069
+        self.curiosity_learning_rate    = 0.0002
+        self.curiosity_buffer_size      = 4096

@@ -1,5 +1,6 @@
 import torch
 from .ExperienceBuffer import *
+from .ExperienceBufferContinuous import *
 
 
 class CuriosityModule:
@@ -10,7 +11,11 @@ class CuriosityModule:
         self.model          = model.Model(state_shape, actions_count)
         self.optimizer      = torch.optim.Adam(self.model.parameters(), lr= learning_rate)
 
-        self.buffer = ExperienceBuffer(buffer_size)
+        if continuous_actions:
+            self.buffer = ExperienceBufferContinuous(buffer_size)
+        else:
+            self.buffer = ExperienceBuffer(buffer_size)
+            
         self.continuous_actions = continuous_actions
 
 
