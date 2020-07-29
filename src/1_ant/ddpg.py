@@ -16,7 +16,7 @@ from common.Training import *
 
 path = "models/ddpg/"
 
-env = gym.make("AntPyBulletEnv-v0", gui)
+env = gym.make("AntPyBulletEnv-v0")
 env.render()
 
 agent = agents.AgentDDPG(env, ModelCritic, ModelActor, Config)
@@ -30,5 +30,4 @@ agent.load(path)
 agent.disable_training()
 while True:
     agent.main()
-    #env.render()
     time.sleep(0.01)

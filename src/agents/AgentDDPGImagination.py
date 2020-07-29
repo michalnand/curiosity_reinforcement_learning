@@ -67,7 +67,12 @@ class AgentDDPGImagination():
             self.exploration.process()
 
         state_t     = torch.from_numpy(self.state).to(self.model_actor.device).unsqueeze(0).float()
-        action_t = self._sample_action(state_t)
+
+        rewards, actions = self.sample_imagination(self.state)
+
+        action_best_idx = numpy.argmax(rewards)
+
+        action_t = actions[action_best_idx][0]
 
         action = action_t.squeeze(0).detach().to("cpu").numpy()
         
@@ -75,9 +80,7 @@ class AgentDDPGImagination():
 
         if self.enabled_training:
             self.imagination_module.add(self.state, action, self.reward, done)
-            
-            reward_sum = self.sample_imagination(self.state)
-            self.experience_replay.add(self.state, action, self.reward + reward_sum, done)
+            self.experience_replay.add(self.state, action, self.reward + rewards[action_best_idx], done)
 
         if self.enabled_training and self.iterations%self.update_frequency == 0:
             self.imagination_module.train()
@@ -97,12 +100,16 @@ class AgentDDPGImagination():
 
     def sample_imagination(self, state_initial):
         
-        reward_sum = 0.0
+        actions = []
+        rewards = []
         for m in range(self.imagination_rollouts):
             state_t     = torch.from_numpy(state_initial).to(self.model_actor.device).unsqueeze(0).float()
 
+            reward_sum = 0.0
+            actions_rollout = []
             for n in range(self.imagination_steps):           
                 action_t = self._sample_action(state_t)
+                actions_rollout.append(action_t.clone())
 
                 state_next_t, reward = self.imagination_module.eval(state_t, action_t)
                 reward      =  reward.squeeze(0).detach().to("cpu").numpy()
@@ -110,9 +117,12 @@ class AgentDDPGImagination():
                 state_t = state_next_t.detach().clone()
                 reward_sum+= reward
 
-        reward_sum = reward_sum/self.imagination_rollouts
+            actions.append(actions_rollout)
 
-        return reward_sum
+            rewards.append(reward_sum/self.imagination_steps)
+
+
+        return rewards, actions
 
             
         

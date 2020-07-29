@@ -12,7 +12,7 @@ class AgentDQN():
         self.batch_size     = config.batch_size
         self.exploration    = config.exploration
         self.gamma          = config.gamma
-        self.tau            = config.tau
+        self.update_target_frequency         = config.update_target_frequency
         self.update_frequency = config.update_frequency
 
         if hasattr(config, 'bellman_steps'):
@@ -70,6 +70,12 @@ class AgentDQN():
             if self.iterations%self.update_frequency == 0:
                 self.train_model()
             
+            if self.iterations%self.update_target_frequency == 0:
+                # update target network
+                for target_param, param in zip(self.model_target.parameters(), self.model.parameters()):
+                    target_param.data.copy_(param.data)
+     
+
         if done:
             self.state = self.env.reset()
         else:
@@ -78,33 +84,6 @@ class AgentDQN():
         self.iterations+= 1
 
         return self.reward, done
-        
-    '''
-    def train_model(self):
-        state_t, action_t, reward_t, state_next_t, done_t = self.experience_replay.sample(self.batch_size, self.model.device)
-        
-        #q values, state now, state next
-        q_predicted      = self.model.forward(state_t)
-        q_predicted_next = self.model_target.forward(state_next_t)
-
-        #compute target, Q learning
-        q_target         = q_predicted.clone()
-        for i in range(self.batch_size):
-            action_idx    = action_t[i]
-            q_target[i][action_idx]   = reward_t[i] + self.gamma*torch.max(q_predicted_next[i])*(1 - done_t[i])
-
-        #train DQN model
-        loss = ((q_target.detach() - q_predicted)**2).mean() 
-        self.optimizer.zero_grad()
-        loss.backward()
-        for param in self.model.parameters():
-            param.grad.data.clamp_(-1.0, 1.0)
-        self.optimizer.step()
-
-        # update target network
-        for target_param, param in zip(self.model_target.parameters(), self.model.parameters()):
-            target_param.data.copy_((1.0 - self.tau)*target_param.data + self.tau*param.data)
-    '''
     
     def train_model(self):
         state_t, action_t, reward_t, state_next_t, done_t = self.experience_replay.sample(self.batch_size, self.model.device)
@@ -135,10 +114,7 @@ class AgentDQN():
             param.grad.data.clamp_(-1.0, 1.0)
         self.optimizer.step()
 
-        # update target network
-        for target_param, param in zip(self.model_target.parameters(), self.model.parameters()):
-            target_param.data.copy_((1.0 - self.tau)*target_param.data + self.tau*param.data)
-     
+       
         
     def choose_action_e_greedy(self, q_values, epsilon):
         result = numpy.argmax(q_values)

@@ -93,7 +93,7 @@ class AgentDDPGCuriosity():
         if self.enabled_training and (self.iterations > self.experience_replay.size):
             if self.iterations%self.update_frequency == 0:
                 self.train_model()
-                time.sleep(0.1)
+
 
         self.state = state_new
             
