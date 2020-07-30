@@ -60,6 +60,7 @@ class ImaginationModule:
         else:
             action_t = torch.zeros((batch_size, self.actions_count))
             action_t[range(batch_size), action] = 1.0
+
         
         state_prediction, reward_prediction = self.model.forward(state, action_t)
 

@@ -81,19 +81,19 @@ class Model(torch.nn.Module):
     def save(self, path):
         print("saving ", path)
 
-        torch.save(self.conv0.state_dict(), path + "trained/model_curiosity_conv0.pt")
-        torch.save(self.conv1.state_dict(), path + "trained/model_curiosity_conv1.pt")
-        torch.save(self.deconv0.state_dict(), path + "trained/model_curiosity_deconv0.pt")
-        torch.save(self.reward.state_dict(), path + "trained/model_curiosity_reward.pt")
+        torch.save(self.conv0.state_dict(), path + "trained/model_env_conv0.pt")
+        torch.save(self.conv1.state_dict(), path + "trained/model_env_conv1.pt")
+        torch.save(self.deconv0.state_dict(), path + "trained/model_env_deconv0.pt")
+        torch.save(self.reward.state_dict(), path + "trained/model_env_reward.pt")
 
 
     def load(self, path):
         print("loading ", path, " device = ", self.device) 
 
-        self.conv0.load_state_dict(torch.load(path + "trained/model_curiosity_conv0.pt", map_location = self.device))
-        self.conv1.load_state_dict(torch.load(path + "trained/model_curiosity_conv1.pt", map_location = self.device))
-        self.deconv0.load_state_dict(torch.load(path + "trained/model_curiosity_deconv0.pt", map_location = self.device))
-        self.reward.load_state_dict(torch.load(path + "trained/model_curiosity_reward.pt", map_location = self.device))
+        self.conv0.load_state_dict(torch.load(path + "trained/model_env_conv0.pt", map_location = self.device))
+        self.conv1.load_state_dict(torch.load(path + "trained/model_env_conv1.pt", map_location = self.device))
+        self.deconv0.load_state_dict(torch.load(path + "trained/model_env_deconv0.pt", map_location = self.device))
+        self.reward.load_state_dict(torch.load(path + "trained/model_env_reward.pt", map_location = self.device))
 
         self.conv0.eval() 
         self.conv1.eval() 

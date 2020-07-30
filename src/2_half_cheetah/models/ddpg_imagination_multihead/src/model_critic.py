@@ -56,7 +56,7 @@ class ListModules(nn.Module):
 
 class Model(torch.nn.Module):
 
-    def __init__(self, input_shape, outputs_count, hidden_count = 256, n_heads = 2):
+    def __init__(self, input_shape, outputs_count, hidden_count = 256, n_heads = 4):
         super(Model, self).__init__()
 
         self.device = "cpu"

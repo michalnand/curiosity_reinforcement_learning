@@ -5,15 +5,23 @@ import gym
 import numpy
 import agents
 import common.atari_wrapper
+import common.super_mario_wrapper
+
 
 from PIL import Image
 import torch
 
 import models.env_conv_model.src.model_env as IMModel
 
-#env = gym.make("MsPacmanNoFrameskip-v4")
-env = gym.make("BreakoutNoFrameskip-v4")
+env = gym.make("MsPacmanNoFrameskip-v4")
 env = common.atari_wrapper.AtariWrapper(env)
+
+#env = gym.make("PongNoFrameskip-v4")
+#env = common.atari_wrapper.AtariWrapper(env)
+
+#env = gym.make("SuperMarioBros-v0")
+#env = common.super_mario_wrapper.SuperMarioWrapper(env)
+
 
 state = env.reset()
 
@@ -21,6 +29,8 @@ actions_count   = env.action_space.n
 
 im_path = "models/env_conv_model/"
 im =  agents.ImaginationModule(IMModel, state.shape, actions_count, learning_rate = 0.001, buffer_size = 4096)
+
+'''
 
 for i in range(10000):
     action = numpy.random.randint(actions_count)
@@ -41,10 +51,11 @@ for i in range(10000):
         state = env.reset()
     else:
         state = state_.copy()
+
+
+
 '''
-
 im.load(im_path)
-
 
 for i in range(100):
     action = numpy.random.randint(actions_count)
@@ -82,9 +93,7 @@ for i in range(trajectory_steps):
     else:
         state = state_.copy()
 
-
-def trajectory_to_image(trajectory, width = 128, height = 128):
-    spacing = 4
+def trajectory_to_image(trajectory, width = 256, height = 256, spacing = 4):
     trajectory_steps = len(trajectory)
     output_width   = trajectory_steps*(width + spacing)
     output_height  = height
@@ -98,10 +107,9 @@ def trajectory_to_image(trajectory, width = 128, height = 128):
         image_np = numpy.array(image)
 
 
-        result[0:height,i*width:(i+1)*width] = image_np
+        result[0:height,i*width + i*spacing:(i+1)*width + i*spacing] = image_np
 
     return result
-
 
 image_reference = trajectory_to_image(reference_trajectory)
 image_reference = Image.fromarray(image_reference)
@@ -111,4 +119,4 @@ image_reference.show()
 image_prediction = trajectory_to_image(predicted_trajectory)
 image_prediction = Image.fromarray(image_prediction)
 image_prediction.show()
-'''
+
