@@ -17,8 +17,9 @@ class AgentDQNCuriosity():
 
         self.exploration    = config.exploration
         self.gamma          = config.gamma
-        self.tau            = config.tau
         self.curiosity_beta = config.curiosity_beta
+        self.update_frequency = config.update_frequency
+        self.update_target_frequency = config.update_target_frequency
 
         if hasattr(config, 'bellman_steps'):
             self.bellman_steps = config.bellman_steps
@@ -27,8 +28,6 @@ class AgentDQNCuriosity():
 
 
         self.iterations     = 0
-
-        self.update_frequency = config.update_frequency
 
 
         self.state_shape    = self.env.observation_space.shape
@@ -83,7 +82,7 @@ class AgentDQNCuriosity():
             
             if self.iterations%self.update_target_frequency == 0:
                 # update target network
-                for target_param, param in zip(self.model_target.parameters(), self.model.parameters()):
+                for target_param, param in zip(self.model_dqn_target.parameters(), self.model_dqn.parameters()):
                     target_param.data.copy_(param.data)
      
         

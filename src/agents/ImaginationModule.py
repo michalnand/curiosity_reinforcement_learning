@@ -28,7 +28,7 @@ class ImaginationModule:
             return None
 
         state_t, action_t, reward_t, state_next_t, done_t = self.buffer.sample(batch_size, self.model.device)
-
+        
         reward_t = reward_t.squeeze(0).unsqueeze(1)
 
         if self.continuous_actions:

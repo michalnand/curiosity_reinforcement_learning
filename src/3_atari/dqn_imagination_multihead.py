@@ -6,29 +6,28 @@ import time
 import gym
 import numpy
 
-import models.dqn_multihead.src.model            as Model
-import models.dqn_multihead.src.config           as Config
+import models.dqn_imagination_multihead.src.model            as Model
+import models.dqn_imagination_multihead.src.model_env        as ModelEnv
+import models.dqn_imagination_multihead.src.config           as Config
 
 
 from common.Training import *
 from common.atari_wrapper import *
 
 
-path = "models/dqn_multihead/"
+path = "models/dqn_imagination_multihead/"
 
-#env = gym.make("PongNoFrameskip-v4")
 env = gym.make("MsPacmanNoFrameskip-v4")
-
 env = AtariWrapper(env)
 env.reset()
 
 
-agent = agents.AgentDQN(env, Model, Config)
+agent = agents.AgentDQNImagination(env, Model, ModelEnv, Config)
 
 max_iterations = 10*(10**6)
 
 trainig = TrainingIterations(env, agent, max_iterations, path, 10000)
-trainig.run() 
+trainig.run()
 
 '''
 agent.load(path)

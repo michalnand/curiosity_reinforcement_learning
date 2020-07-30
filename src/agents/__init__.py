@@ -11,6 +11,7 @@ from .AgentA2CImagination import *
 
 from .AgentDQN import *
 from .AgentDQNCuriosity import *
+from .AgentDQNImagination import *
 
 from .AgentPPO import *
 from .AgentPPOCuriosity import *

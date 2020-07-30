@@ -12,8 +12,8 @@ class AgentDQN():
         self.batch_size     = config.batch_size
         self.exploration    = config.exploration
         self.gamma          = config.gamma
-        self.update_target_frequency         = config.update_target_frequency
         self.update_frequency = config.update_frequency
+        self.update_target_frequency         = config.update_target_frequency
 
         if hasattr(config, 'bellman_steps'):
             self.bellman_steps = config.bellman_steps
