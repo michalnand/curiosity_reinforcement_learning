@@ -8,7 +8,7 @@ class Flatten(nn.Module):
 
 class Model(torch.nn.Module):
 
-    def __init__(self, input_shape, outputs_count):
+    def __init__(self, input_shape, outputs_count, kernels_count = 64):
         super(Model, self).__init__()
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -20,13 +20,13 @@ class Model(torch.nn.Module):
         input_height    = self.input_shape[1]
         input_width     = self.input_shape[2]   
 
-        kernels_count = 32
+        input_kernel_size = 4
 
-        fc_input_height = input_shape[1]//(4*2*2)
-        fc_input_width  = input_shape[2]//(4*2*2)
+        fc_input_height = input_shape[1]//(input_kernel_size*2*2)
+        fc_input_width  = input_shape[2]//(input_kernel_size*2*2)
 
         self.conv0 = nn.Sequential( 
-                                    nn.Conv2d(input_channels + outputs_count, kernels_count, kernel_size=4, stride=4, padding=1),
+                                    nn.Conv2d(input_channels + outputs_count, kernels_count, kernel_size=input_kernel_size, stride=input_kernel_size, padding=1),
                                     nn.ReLU(),
                                     nn.Conv2d(kernels_count, kernels_count, kernel_size=3, stride=1, padding=1),
                                     nn.ReLU(),
@@ -38,8 +38,8 @@ class Model(torch.nn.Module):
         )
 
         self.deconv0 = nn.Sequential(
-                                        nn.ConvTranspose2d(kernels_count, input_channels, kernel_size=4, stride=4, padding=0),
-                                    )
+                                        nn.ConvTranspose2d(kernels_count, 1, kernel_size=input_kernel_size, stride=input_kernel_size, padding=0),
+        )
 
         self.reward = nn.Sequential(
                                             nn.Conv2d(kernels_count, kernels_count, kernel_size=3, stride=2, padding=1),
@@ -73,10 +73,15 @@ class Model(torch.nn.Module):
 
         tmp = conv0_output + conv1_output
 
-        observation_prediction = self.deconv0(tmp)
+        frame_prediction       = self.deconv0(tmp) 
         reward_prediction      = self.reward(tmp)
-        
-        return observation_prediction + state, reward_prediction
+
+        frames_count            = state.shape[1]
+        state_tmp               = torch.narrow(state, 1, 0, frames_count-1)
+        frame_prediction        = frame_prediction + torch.narrow(state, 1, 0, 1)
+        observation_prediction  = torch.cat([frame_prediction, state_tmp], dim = 1)
+  
+        return observation_prediction, reward_prediction
 
     def save(self, path):
         print("saving ", path)
@@ -97,23 +102,11 @@ class Model(torch.nn.Module):
 
         self.conv0.eval() 
         self.conv1.eval() 
-        self.conv2.eval() 
+        self.deconv0.eval() 
         self.reward.eval() 
 
 
-    
-    def _layers_to_model(self, layers):
-
-        for i in range(len(layers)):
-            if isinstance(layers[i], nn.Conv2d) or isinstance(layers[i], nn.Linear):
-                torch.nn.init.xavier_uniform_(layers[i].weight)
-
-        model = nn.Sequential(*layers)
-        model.to(self.device)
-
-        return model
-
-
+  
 if __name__ == "__main__":
     batch_size = 8
 
