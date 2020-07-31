@@ -30,7 +30,6 @@ actions_count   = env.action_space.n
 im_path = "models/env_conv_model/"
 im =  agents.ImaginationModule(IMModel, state.shape, actions_count, learning_rate = 0.001, buffer_size = 4096)
 
-'''
 
 for i in range(10000):
     action = numpy.random.randint(actions_count)
@@ -120,3 +119,4 @@ image_prediction = trajectory_to_image(predicted_trajectory)
 image_prediction = Image.fromarray(image_prediction)
 image_prediction.show()
 
+'''
