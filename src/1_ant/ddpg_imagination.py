@@ -21,9 +21,9 @@ env.render()
 
 agent = agents.AgentDDPGImagination(env, ModelCritic, ModelActor, ModelEnv, Config)
 
-max_iterations = 10**6
+max_iterations = 2*(10**6)
 #trainig = TrainingIterations(env, agent, max_iterations, path, 1000)
-#trainig.run()
+#trainig.run() 
 
 agent.load(path)
 agent.disable_training()
