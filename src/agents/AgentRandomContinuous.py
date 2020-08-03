@@ -15,7 +15,7 @@ class AgentRandomContinuous:
 
         action = numpy.tanh(action)
 
-        state, reward, done, info = self.env.step(action)
+        self.state, reward, done, info = self.env.step(action)
 
         '''
         print(state.shape)
@@ -24,7 +24,7 @@ class AgentRandomContinuous:
         print("\n\n")
         '''
         if done:
-            state = self.env.reset()
+            self.state = self.env.reset()
 
         return reward, done
     

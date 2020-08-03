@@ -126,7 +126,7 @@ if __name__ == "__main__":
     input_shape     = (26, )
     actions_count   = 5
 
-    model = Model(input_shape, actions_count, hidden_count=128, n_heads = 4)
+    model = Model(input_shape, actions_count, hidden_count=128, n_heads = 2)
 
     state       = torch.randn(batch_size, input_shape[0])
     action      = torch.randn(batch_size, actions_count)
@@ -134,3 +134,4 @@ if __name__ == "__main__":
     critic_output = model.forward(state, action)
     
     make_dot(critic_output).render("graph", format="png")
+    print("done")

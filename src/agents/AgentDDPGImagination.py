@@ -44,9 +44,11 @@ class AgentDDPGImagination():
         self.optimizer_actor    = torch.optim.Adam(self.model_actor.parameters(), lr= config.actor_learning_rate)
         self.optimizer_critic   = torch.optim.Adam(self.model_critic.parameters(), lr= config.critic_learning_rate, weight_decay=0.0001)
 
-        self.imagination_rollouts = config.imagination_rollouts
-        self.imagination_steps  = config.imagination_steps
-        self.imagination_module = ImaginationModule(ModelImagination, self.state_shape, self.actions_count, config.imagination_learning_rate, config.imagination_buffer_size, True)
+
+        self.imagination_beta       = config.imagination_beta
+        self.imagination_rollouts   = config.imagination_rollouts
+        self.imagination_steps      = config.imagination_steps
+        self.imagination_module     = ImaginationModule(ModelImagination, self.state_shape, self.actions_count, config.imagination_learning_rate, config.imagination_buffer_size, True)
 
         self.state    = env.reset()
 
@@ -80,7 +82,7 @@ class AgentDDPGImagination():
 
         if self.enabled_training:
             self.imagination_module.add(self.state, action, self.reward, done)
-            self.experience_replay.add(self.state, action, self.reward + rewards[action_best_idx], done)
+            self.experience_replay.add(self.state, action, self.reward + self.imagination_beta*rewards[action_best_idx], done)
 
         if self.enabled_training and self.iterations%self.update_frequency == 0:
             self.imagination_module.train()
