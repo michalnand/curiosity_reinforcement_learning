@@ -10,7 +10,7 @@ playing with DQN and DDPG, with mutlihead critic or multihead curiosity module
 
 ![](images/line_follower.gif)
 
-![](src/3_line_follower/results/training_score_per_episode.png)
+![](src/0_line_follower/results/training_score_per_episode.png)
 
 * DDPG : common ddpg
 * DDPG + imagination : DDPG imagination (4 rollouts + 4 steps) and bonus reward from imagination
