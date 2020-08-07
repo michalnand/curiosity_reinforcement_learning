@@ -5,7 +5,7 @@ from .ExperienceBufferContinuous import *
 from .ImaginationModule import *
 
 
-class AgentDDPGImagination():
+class AgentDDPGImaginationMetaActor():
     def __init__(self, env, ModelCritic, ModelActor, ModelImagination, Config):
         self.env = env
 
@@ -97,6 +97,7 @@ class AgentDDPGImagination():
 
         return self.reward, done
 
+   
     def _process_imagination(self, state_initial):
 
         states_b    = torch.zeros((self.imagination_steps, self.imagination_rollouts, ) + self.state_shape).to(self.model_actor.device)
@@ -105,29 +106,52 @@ class AgentDDPGImagination():
 
         states_t    = state_initial.repeat(self.imagination_rollouts, 1).clone().detach()
 
-        for n in range(self.imagination_steps):    
-            if n > 0:                   
-                actions_t = self._sample_action(states_t, False)
-            else:
+        for n in range(self.imagination_steps):       
+            if n > 0:                
                 actions_t = self._sample_action(states_t, True)
+            else:
+                actions_t = self._sample_action(states_t, False)
 
             states_next_t, rewards_t = self.imagination_module.eval(states_t, actions_t)
            
             states_t = states_next_t.clone()
 
-            states_b[n]     = states_t
-            actions_b[n]    = actions_t
-            rewards_b[n]    = rewards_t
+            states_b[n]     = states_t.clone()
+            actions_b[n]    = actions_t.clone()
+            rewards_b[n]    = rewards_t.clone()
 
+        rewards_b = rewards_b.squeeze(2)
 
         return states_b, actions_b, rewards_b
+
 
     def _sample_imagination(self, actions_b, rewards_b):
         rewards_sum = torch.sum(rewards_b, dim = 1)
         best_idx    = torch.argmax(rewards_sum)
 
         return actions_b[best_idx][0].detach().to("cpu").numpy(), rewards_sum[best_idx].detach().to("cpu").numpy()
-           
+
+    def _imagination_exploration_entropy_loss(self, initial_states_b):
+        batch_size = initial_states_b.shape[0]
+
+        entropy_t = torch.zeros((batch_size, 1))
+        for n in range(batch_size):
+            states_b, _, _  = self._process_imagination(initial_states_b[0])
+
+            #take ending states in each rollout
+            ending_states_b = states_b[:][self.imagination_steps - 1]
+
+            #compute variance
+            variance        = torch.var(ending_states_b)
+            
+            #compute entropy, considering states distribution is gaussian
+            entropy_t[n]    = 0.5*torch.log(2.0*numpy.pi*numpy.e*variance)
+        
+
+ 
+        exploration_entropy_loss = entropy_t.mean()        
+
+        return exploration_entropy_loss
         
     def train_model(self):
         state_t, action_t, reward_t, state_next_t, done_t = self.experience_replay.sample(self.batch_size, self.model_critic.device)
@@ -135,8 +159,8 @@ class AgentDDPGImagination():
         reward_t = reward_t.unsqueeze(-1)
         done_t   = (1.0 - done_t).unsqueeze(-1)
 
-        action_next_t   = self.model_actor_target.forward(state_next_t).detach()
-        value_next_t    = self.model_critic_target.forward(state_next_t, action_next_t).detach()
+        action_next_t      = self.model_actor_target.forward(state_next_t).detach()
+        value_next_t       = self.model_critic_target.forward(state_next_t, action_next_t).detach()
 
         #critic loss
         value_target    = reward_t + self.gamma*done_t*value_next_t
@@ -153,7 +177,13 @@ class AgentDDPGImagination():
         #actor loss
         actor_loss      = -self.model_critic.forward(state_t, self.model_actor.forward(state_t))
         actor_loss      = actor_loss.mean()
-        actor_loss+=    self._imagination_loss(state_t)
+
+        #maximize exploration entropy loss
+        entropy_loss = -0.1*self._imagination_exploration_entropy_loss(state_t)
+        actor_loss+=  entropy_loss
+        
+        #print("entropy_loss = ", entropy_loss)
+
 
         #update actor
         self.optimizer_actor.zero_grad()       
@@ -167,8 +197,6 @@ class AgentDDPGImagination():
         for target_param, param in zip(self.model_critic_target.parameters(), self.model_critic.parameters()):
             target_param.data.copy_((1.0 - self.tau)*target_param.data + self.tau*param.data)
 
-
-
     def save(self, save_path):
         self.model_critic.save(save_path)
         self.model_actor.save(save_path)
@@ -180,14 +208,14 @@ class AgentDDPGImagination():
         self.imagination_module.load(save_path)     
 
 
-    def _sample_action(self, state_t, use_actor_variance = False):
+    def _sample_action(self, state_t, use_actor_variance):
         
         if self.enabled_training:
             epsilon = self.exploration.get()
         else:
             epsilon = self.exploration.get_testing()
        
-        action_t, var_t  = self.model_actor(state_t)
+        action_t, var_t  = self.model_actor.forward_var(state_t)
 
         noise  = torch.randn(state_t.shape[0], self.actions_count).to(self.model_actor.device)
 

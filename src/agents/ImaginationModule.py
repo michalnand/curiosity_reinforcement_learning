@@ -64,7 +64,7 @@ class ImaginationModule:
         
         state_prediction, reward_prediction = self.model.forward(state, action_t)
 
-        state_prediction    = state_prediction.detach()
+        #state_prediction    = state_prediction.detach()
         reward_prediction   = reward_prediction.detach()
 
         return state_prediction, reward_prediction
