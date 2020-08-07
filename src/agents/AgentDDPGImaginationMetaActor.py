@@ -105,27 +105,28 @@ class AgentDDPGImagination():
 
         states_t    = state_initial.repeat(self.imagination_rollouts, 1).clone().detach()
 
-
-        for n in range(self.imagination_steps):                       
-            actions_t = self._sample_action(states_t)
+        for n in range(self.imagination_steps):    
+            if n > 0:                   
+                actions_t = self._sample_action(states_t, False)
+            else:
+                actions_t = self._sample_action(states_t, True)
 
             states_next_t, rewards_t = self.imagination_module.eval(states_t, actions_t)
            
             states_t = states_next_t.clone()
 
-            states_b[n]     = states_t.clone()
-            actions_b[n]    = actions_t.clone()
-            rewards_b[n]    = rewards_t.clone()
+            states_b[n]     = states_t
+            actions_b[n]    = actions_t
+            rewards_b[n]    = rewards_t
 
-        rewards_b = rewards_b.squeeze(2)
 
         return states_b, actions_b, rewards_b
 
     def _sample_imagination(self, actions_b, rewards_b):
-        rewards_mean    = torch.mean(rewards_b, dim = 1)
-        best_idx        = torch.argmax(rewards_mean)
+        rewards_sum = torch.sum(rewards_b, dim = 1)
+        best_idx    = torch.argmax(rewards_sum)
 
-        return actions_b[best_idx][0].detach().to("cpu").numpy(), rewards_mean[best_idx].detach().to("cpu").numpy()
+        return actions_b[best_idx][0].detach().to("cpu").numpy(), rewards_sum[best_idx].detach().to("cpu").numpy()
            
         
     def train_model(self):
@@ -152,6 +153,7 @@ class AgentDDPGImagination():
         #actor loss
         actor_loss      = -self.model_critic.forward(state_t, self.model_actor.forward(state_t))
         actor_loss      = actor_loss.mean()
+        actor_loss+=    self._imagination_loss(state_t)
 
         #update actor
         self.optimizer_actor.zero_grad()       
@@ -178,18 +180,21 @@ class AgentDDPGImagination():
         self.imagination_module.load(save_path)     
 
 
-    def _sample_action(self, state_t):
+    def _sample_action(self, state_t, use_actor_variance = False):
         
         if self.enabled_training:
             epsilon = self.exploration.get()
         else:
             epsilon = self.exploration.get_testing()
        
-        action_t    = self.model_actor(state_t)
+        action_t, var_t  = self.model_actor(state_t)
 
-        noise       = torch.randn(state_t.shape[0], self.actions_count).to(self.model_actor.device)
-        action_t    = action_t + epsilon*noise
-        action_t    = torch.clamp(action_t, -1.0, 1.0)
-    
+        noise  = torch.randn(state_t.shape[0], self.actions_count).to(self.model_actor.device)
 
+        if use_actor_variance:
+            action_t = action_t + var_t*noise
+        else:
+            action_t = action_t + epsilon*noise
+
+        action_t = torch.clamp(action_t, -1.0, 1.0)
         return action_t
