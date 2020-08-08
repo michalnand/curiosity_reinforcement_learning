@@ -62,6 +62,11 @@ class Model(torch.nn.Module):
 
     def load(self, path):       
         print("loading from ", path)
-        self.model.load_state_dict(torch.load(path + "trained/model_meta_actor.pt", map_location = self.device))
-        self.model.eval()  
+        self.model_features.load_state_dict(torch.load(path + "trained/model_meta_actor_features.pt", map_location = self.device))
+        self.model_features.eval()  
+        self.model_mu.load_state_dict(torch.load(path + "trained/model_meta_actor_mu.pt", map_location = self.device))
+        self.model_mu.eval()  
+        self.model_var.load_state_dict(torch.load(path + "trained/model_meta_actor_var.pt", map_location = self.device))
+        self.model_var.eval()  
+        
     
