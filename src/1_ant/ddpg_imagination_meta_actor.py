@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(0, '..')
 import gym
-import gym_line_follower
+import pybulletgym
 import numpy
 import time
 

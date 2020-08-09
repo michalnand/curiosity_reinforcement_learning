@@ -31,5 +31,7 @@ while True:
     env.render()
     time.sleep(0.01)
 
+    print(reward)
+
     if done:
         env.reset()

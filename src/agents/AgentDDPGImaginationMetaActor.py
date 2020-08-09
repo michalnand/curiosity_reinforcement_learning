@@ -46,6 +46,7 @@ class AgentDDPGImaginationMetaActor():
 
 
         self.imagination_beta       = config.imagination_beta
+        self.entropy_beta           = config.entropy_beta
         self.imagination_rollouts   = config.imagination_rollouts
         self.imagination_steps      = config.imagination_steps
         self.imagination_module     = ImaginationModule(ModelImagination, self.state_shape, self.actions_count, config.imagination_learning_rate, config.imagination_buffer_size, True)
@@ -179,7 +180,7 @@ class AgentDDPGImaginationMetaActor():
         actor_loss      = actor_loss.mean()
 
         #maximize exploration entropy loss
-        entropy_loss = -0.1*self._imagination_exploration_entropy_loss(state_t)
+        entropy_loss = -self.entropy_beta*self._imagination_exploration_entropy_loss(state_t)
         actor_loss+=  entropy_loss
         
         #print("entropy_loss = ", entropy_loss)

@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(0, '..')
 import gym
-import gym_line_follower
+import pybulletgym
 import numpy
 import time
 
@@ -22,7 +22,7 @@ env = gym.make("HalfCheetahPyBulletEnv-v0")
 
 agent = agents.AgentDDPGImaginationMetaActor(env, ModelCritic, ModelMetaActor, ModelEnv, Config)
 
-max_iterations = 8*(10**6)
+max_iterations = 6*(10**6)
 trainig = TrainingIterations(env, agent, max_iterations, path, 1000)
 trainig.run()
 
