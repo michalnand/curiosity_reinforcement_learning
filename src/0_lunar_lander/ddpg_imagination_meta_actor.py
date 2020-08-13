@@ -1,7 +1,6 @@
 import sys
 sys.path.insert(0, '..')
 import gym
-import gym_line_follower
 import numpy
 import time
 
@@ -17,21 +16,31 @@ from common.Training import *
 
 path = "models/ddpg_imagination_meta_actor/"
 
-class Wrapper(gym.ObservationWrapper):
+class Wrapper(gym.RewardWrapper):
     def __init__(self, env):
-        gym.ObservationWrapper.__init__(self, env)
-        
-    def observation(self, state):
-        state_np = numpy.array(state).astype(numpy.float32)
-        return state_np
+        gym.RewardWrapper.__init__(self, env)
+
+    def step(self, action):
+        obs, reward, done, info = self.env.step(action)
+
+        reward = reward / 10.0
+
+        if reward < -1.0: 
+            reward = -1.0
+
+        if reward > 1.0:
+            reward = 1.0
+
+        return obs, reward, done, info
 
 
-env = gym.make("LineFollower-v0", gui = True)
+env = gym.make("LunarLanderContinuous-v2")
 env = Wrapper(env)
+env.reset()
 
 agent = agents.AgentDDPGImaginationMetaActor(env, ModelCritic, ModelMetaActor, ModelEnv, Config)
 
-max_iterations = (10**5)
+max_iterations = (10**6)
 #trainig = TrainingIterations(env, agent, max_iterations, path, 1000)
 #trainig.run()
 
