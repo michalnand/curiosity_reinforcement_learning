@@ -27,3 +27,8 @@ playing with DQN and DDPG, with mutlihead critic or multihead curiosity module
 * DDPG : common ddpg
 * DDPG + imagination : DDPG imagination (4 rollouts + 4 steps) and bonus reward from imagination
 * DDPG multihead + imagination : DDPG with multihead critic and imagination (4 rollouts + 4 steps) and bonus reward from imagination,
+
+
+# dependences
+cmake
+numpy torch PIL opencv-python gym pybullet gym[atari]
