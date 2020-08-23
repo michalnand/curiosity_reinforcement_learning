@@ -7,7 +7,7 @@ class Model(torch.nn.Module):
     def __init__(self, input_shape, outputs_count, hidden_count = 256):
         super(Model, self).__init__()
 
-        self.device         ="cpu"
+        self.device         = "cpu" #torch.device("cuda" if torch.cuda.is_available() else "cpu")
          
         self.layers_features = [ 
                                     nn.Linear(input_shape[0], hidden_count),
@@ -62,11 +62,6 @@ class Model(torch.nn.Module):
 
     def load(self, path):       
         print("loading from ", path)
-        self.model_features.load_state_dict(torch.load(path + "trained/model_meta_actor_features.pt", map_location = self.device))
-        self.model_mu.load_state_dict(torch.load(path + "trained/model_meta_actor_mu.pt", map_location = self.device))
-        self.model_var.load_state_dict(torch.load(path + "trained/model_meta_actor_var.pt", map_location = self.device))
-        
-        self.model_features.eval()  
-        self.model_mu.eval()  
-        self.model_var.eval()  
+        self.model.load_state_dict(torch.load(path + "trained/model_meta_actor.pt", map_location = self.device))
+        self.model.eval()  
     

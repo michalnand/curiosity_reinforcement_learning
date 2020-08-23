@@ -8,6 +8,7 @@ class Model(torch.nn.Module):
         super(Model, self).__init__()
 
         self.device = "cpu" 
+        
          
         self.layers = [ 
                                     nn.Linear(input_shape[0], hidden_count),

@@ -6,7 +6,7 @@ class Model(torch.nn.Module):
     def __init__(self, input_shape, outputs_count, hidden_count = 128):
         super(Model, self).__init__()
 
-        self.device         ="cpu"
+        self.device = "cpu"
 
         self.model_features = nn.Sequential(
                                             nn.Linear(input_shape[0] + outputs_count, hidden_count),

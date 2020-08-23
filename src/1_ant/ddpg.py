@@ -25,7 +25,6 @@ max_iterations = 4*(10**6)
 #trainig = TrainingIterations(env, agent, max_iterations, path, 1000)
 #trainig.run() 
 
-
 agent.load(path)
 agent.disable_training()
 while True:
