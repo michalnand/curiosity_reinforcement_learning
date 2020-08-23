@@ -7,7 +7,7 @@ class Config():
         self.update_frequency = 4
         self.update_target_frequency = 10000
 
-        self.batch_size     = 32 
+        self.batch_size     = 64 
         self.learning_rate  = 0.0001
         self.bellman_steps  = 4
         
@@ -19,6 +19,6 @@ class Config():
         self.imagination_rollouts           = 4
         self.imagination_steps              = 4
         self.imagination_learning_rate      = 0.0002 
-        self.imagination_buffer_size        = 8192
+        self.imagination_buffer_size        = 4096
 
 
