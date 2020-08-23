@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torchviz import make_dot
 
 class Flatten(nn.Module):
     def forward(self, input):
@@ -83,10 +84,12 @@ class Model(torch.nn.Module):
 
 if __name__ == "__main__":
     state_shape = (1, 4, 4)
-    state = torch.randn((5, ) + state_shape)
+    state = torch.randn((1, ) + state_shape)
 
     model = Model(state_shape, 4)
 
     y = model.forward(state)
 
     print(y)
+
+    make_dot(y).render("model", format="png")

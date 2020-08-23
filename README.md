@@ -30,5 +30,5 @@ playing with DQN and DDPG, with mutlihead critic or multihead curiosity module
 
 
 # dependences
-cmake
-numpy torch PIL opencv-python gym pybullet gym[atari]
+cmake python3 pip3
+numpy torch PIL opencv-python gym pybullet pybulletgym gym[atari]

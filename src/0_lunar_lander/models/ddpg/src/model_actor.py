@@ -1,15 +1,12 @@
 import torch
 import torch.nn as nn
 
-
-
 class Model(torch.nn.Module):
     def __init__(self, input_shape, outputs_count, hidden_count = 64):
         super(Model, self).__init__()
 
         self.device = "cpu"
         
-         
         self.layers = [ 
                                     nn.Linear(input_shape[0], hidden_count),
                                     nn.ReLU(),           
@@ -28,7 +25,6 @@ class Model(torch.nn.Module):
 
         print(self.model)
        
-
     def forward(self, state):
         return self.model(state)
 
