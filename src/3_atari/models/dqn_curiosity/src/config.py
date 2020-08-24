@@ -7,7 +7,7 @@ class Config():
         self.update_frequency = 4
         self.update_target_frequency = 10000
 
-        self.batch_size     = 64 
+        self.batch_size     = 32 
         self.learning_rate  = 0.0001
         self.bellman_steps  = 4
         
@@ -18,6 +18,5 @@ class Config():
 
         self.curiosity_beta             = 100.0
         self.curiosity_learning_rate    = 0.0001 
-        self.curiosity_buffer_size      = 4096
 
 

@@ -46,7 +46,7 @@ class AgentDDPGCuriosity():
         self.optimizer_critic   = torch.optim.Adam(self.model_critic.parameters(), lr= config.critic_learning_rate, weight_decay=0.0001)
 
         self.curiosity_beta   = config.curiosity_beta
-        self.curiosity_module = CuriosityModule(ModelCuriosity, self.state_shape, self.actions_count, config.curiosity_learning_rate, config.curiosity_buffer_size, True)
+        self.curiosity_module = CuriosityModule(ModelCuriosity, self.state_shape, self.actions_count, config.curiosity_learning_rate, self.experience_replay, True)
 
         self.state    = env.reset()
 

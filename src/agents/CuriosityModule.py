@@ -4,25 +4,17 @@ from .ExperienceBufferContinuous import *
 
 
 class CuriosityModule:
-    def __init__(self, model, state_shape, actions_count, learning_rate = 0.001, buffer_size = 1024, continuous_actions = False):
+    def __init__(self, model, state_shape, actions_count, learning_rate, replay_buffer, continuous_actions):
 
         self.actions_count = actions_count
 
         self.model          = model.Model(state_shape, actions_count)
         self.optimizer      = torch.optim.Adam(self.model.parameters(), lr= learning_rate)
 
-        if continuous_actions:
-            self.buffer = ExperienceBufferContinuous(buffer_size)
-        else:
-            self.buffer = ExperienceBuffer(buffer_size)
-            
+      
+        self.buffer = replay_buffer
         self.continuous_actions = continuous_actions
 
-
-    def add(self, state, action, reward, done = False):
-        self.buffer.add(state, action, reward, done)
-        
-    
     def train(self, batch_size = 64):
         if self.buffer.is_full() == False:
             return None

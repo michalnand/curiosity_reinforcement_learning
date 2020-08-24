@@ -42,7 +42,7 @@ class AgentDQNCuriosity():
         for target_param, param in zip(self.model_dqn_target.parameters(), self.model_dqn.parameters()):
             target_param.data.copy_(param.data)
 
-        self.curiosity_module = CuriosityModule(ModelCuriosity, self.state_shape, self.actions_count, config.curiosity_learning_rate, config.curiosity_buffer_size)
+        self.curiosity_module = CuriosityModule(ModelCuriosity, self.state_shape, self.actions_count, config.curiosity_learning_rate, self.experience_replay)
 
         self.state    = env.reset()
         self.enable_training()
@@ -71,14 +71,10 @@ class AgentDQNCuriosity():
 
         if self.enabled_training:
             self.experience_replay.add(self.state, self.action, self.reward, done)
-            self.curiosity_module.add(self.state, self.action, self.reward)
-
-        if self.enabled_training and self.iterations%self.update_frequency == 0:
-            self.curiosity_module.train()
        
-        if self.enabled_training and (self.iterations > self.experience_replay.size):
-            if self.iterations%self.update_frequency == 0:
-                self.train_model()
+        if self.enabled_training and (self.iterations > self.experience_replay.size) and self.iterations%self.update_frequency == 0:
+            self.train_model()
+            self.curiosity_module.train()
             
             if self.iterations%self.update_target_frequency == 0:
                 # update target network

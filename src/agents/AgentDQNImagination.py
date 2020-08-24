@@ -41,7 +41,7 @@ class AgentDQNImagination():
 
         self.imagination_rollouts = config.imagination_rollouts
         self.imagination_steps  = config.imagination_steps
-        self.imagination_module = ImaginationModule(ModelImagination, self.state_shape, self.actions_count, config.imagination_learning_rate, config.imagination_buffer_size, False)
+        self.imagination_module = ImaginationModule(ModelImagination, self.state_shape, self.actions_count, config.imagination_learning_rate, self.experience_replay, False)
 
         self.state    = env.reset()
         self.enable_training()
@@ -73,14 +73,10 @@ class AgentDQNImagination():
 
         if self.enabled_training: 
             self.experience_replay.add(self.state, action, self.reward, done)
-            self.imagination_module.add(self.state, action, self.reward + rewards[trajectory_best_idx])
 
-        if self.enabled_training and self.iterations%self.update_frequency == 0:
+        if self.enabled_training and (self.iterations > self.experience_replay.size) and self.iterations%self.update_frequency == 0:
             self.imagination_module.train()
-       
-        if self.enabled_training and (self.iterations > self.experience_replay.size):
-            if self.iterations%self.update_frequency == 0:
-                self.train_model()
+            self.train_model()
             
             if self.iterations%self.update_target_frequency == 0:
                 # update target network

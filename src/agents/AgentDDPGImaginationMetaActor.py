@@ -49,7 +49,7 @@ class AgentDDPGImaginationMetaActor():
         self.entropy_beta           = config.entropy_beta
         self.imagination_rollouts   = config.imagination_rollouts
         self.imagination_steps      = config.imagination_steps
-        self.imagination_module     = ImaginationModule(ModelImagination, self.state_shape, self.actions_count, config.imagination_learning_rate, config.imagination_buffer_size, True)
+        self.imagination_module     = ImaginationModule(ModelImagination, self.state_shape, self.actions_count, config.imagination_learning_rate, self.experience_replay, True)
 
         self.state    = env.reset()
 
@@ -79,15 +79,11 @@ class AgentDDPGImaginationMetaActor():
         state_new, self.reward, done, self.info = self.env.step(action)
 
         if self.enabled_training:
-            self.imagination_module.add(self.state, action, self.reward, done)
             self.experience_replay.add(self.state, action, self.reward + self.imagination_beta*im_reward, done)
 
-        if self.enabled_training and self.iterations%self.update_frequency == 0:
+        if self.enabled_training and (self.iterations > self.experience_replay.size) and self.iterations%self.update_frequency == 0:
             self.imagination_module.train()
-        
-        if self.enabled_training and (self.iterations > self.experience_replay.size):
-            if self.iterations%self.update_frequency == 0:
-                self.train_model()
+            self.train_model()
 
         self.state = state_new
             

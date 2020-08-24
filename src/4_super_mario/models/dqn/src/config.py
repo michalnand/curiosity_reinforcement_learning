@@ -7,7 +7,7 @@ class Config():
         self.update_frequency = 4
         self.update_target_frequency = 10000
 
-        self.batch_size     = 64 
+        self.batch_size     = 32 
         self.learning_rate  = 0.0001
         self.bellman_steps  = 4
         
