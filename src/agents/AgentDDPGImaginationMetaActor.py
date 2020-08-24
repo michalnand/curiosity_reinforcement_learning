@@ -132,8 +132,10 @@ class AgentDDPGImaginationMetaActor():
         batch_size = initial_states_b.shape[0]
 
         entropy_t = torch.zeros((batch_size, 1))
+
+
         for n in range(batch_size):
-            states_b, _, _  = self._process_imagination(initial_states_b[0])
+            states_b, _, _  = self._process_imagination(initial_states_b[n])
 
             #take ending states in each rollout
             ending_states_b = states_b[:][self.imagination_steps - 1]

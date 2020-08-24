@@ -7,30 +7,34 @@ class Model(torch.nn.Module):
     def __init__(self, input_shape, outputs_count, hidden_count = 256):
         super(Model, self).__init__()
 
-        self.device         = "cpu" #torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = "cpu"
          
         self.layers_features = [ 
                                     nn.Linear(input_shape[0], hidden_count),
-                                    nn.ReLU(),           
-                                    nn.Linear(hidden_count, hidden_count//2),
-                                    nn.ReLU()
+                                    nn.ReLU()           
         ]
 
         self.layers_mu = [
+                            nn.Linear(hidden_count, hidden_count//2),
+                            nn.ReLU(),
                             nn.Linear(hidden_count//2, outputs_count),
                             nn.Tanh()
         ]
 
         self.layers_var = [
+                            nn.Linear(hidden_count, hidden_count//2),
+                            nn.ReLU(),
                             nn.Linear(hidden_count//2, outputs_count),
                             nn.Softplus()
         ]
 
         torch.nn.init.xavier_uniform_(self.layers_features[0].weight)
-        torch.nn.init.xavier_uniform_(self.layers_features[2].weight)
 
-        torch.nn.init.uniform_(self.layers_mu[0].weight, -0.3, 0.3)
-        torch.nn.init.uniform_(self.layers_var[0].weight, -0.003, 0.003)
+        torch.nn.init.xavier_uniform_(self.layers_mu[0].weight)
+        torch.nn.init.uniform_(self.layers_mu[2].weight, -0.3, 0.3)
+        
+        torch.nn.init.xavier_uniform_(self.layers_var[0].weight)
+        torch.nn.init.uniform_(self.layers_var[2].weight, -0.003, 0.003)
 
         self.model_features = nn.Sequential(*self.layers_features)
         self.model_features.to(self.device)
@@ -62,6 +66,11 @@ class Model(torch.nn.Module):
 
     def load(self, path):       
         print("loading from ", path)
-        self.model.load_state_dict(torch.load(path + "trained/model_meta_actor.pt", map_location = self.device))
-        self.model.eval()  
+        self.model_features.load_state_dict(torch.load(path + "trained/model_meta_actor_features.pt", map_location = self.device))
+        self.model_features.eval()  
+        self.model_mu.load_state_dict(torch.load(path + "trained/model_meta_actor_mu.pt", map_location = self.device))
+        self.model_mu.eval()  
+        self.model_var.load_state_dict(torch.load(path + "trained/model_meta_actor_var.pt", map_location = self.device))
+        self.model_var.eval()  
+        
     

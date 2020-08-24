@@ -42,7 +42,7 @@ class AgentDQNCuriosity():
         for target_param, param in zip(self.model_dqn_target.parameters(), self.model_dqn.parameters()):
             target_param.data.copy_(param.data)
 
-        self.curiosity_module = CuriosityModule(ModelCuriosity, self.state_shape, self.actions_count, config.curiosity_learning_rate, self.experience_replay)
+        self.curiosity_module = CuriosityModule(ModelCuriosity, self.state_shape, self.actions_count, config.curiosity_learning_rate, self.experience_replay, False)
 
         self.state    = env.reset()
         self.enable_training()

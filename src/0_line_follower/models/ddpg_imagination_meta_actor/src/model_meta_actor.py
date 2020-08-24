@@ -11,26 +11,30 @@ class Model(torch.nn.Module):
          
         self.layers_features = [ 
                                     nn.Linear(input_shape[0], hidden_count),
-                                    nn.ReLU(),           
-                                    nn.Linear(hidden_count, hidden_count//2),
-                                    nn.ReLU()
+                                    nn.ReLU()           
         ]
 
         self.layers_mu = [
+                            nn.Linear(hidden_count, hidden_count//2),
+                            nn.ReLU(),
                             nn.Linear(hidden_count//2, outputs_count),
                             nn.Tanh()
         ]
 
         self.layers_var = [
+                            nn.Linear(hidden_count, hidden_count//2),
+                            nn.ReLU(),
                             nn.Linear(hidden_count//2, outputs_count),
                             nn.Softplus()
         ]
 
         torch.nn.init.xavier_uniform_(self.layers_features[0].weight)
-        torch.nn.init.xavier_uniform_(self.layers_features[2].weight)
 
-        torch.nn.init.uniform_(self.layers_mu[0].weight, -0.3, 0.3)
-        torch.nn.init.uniform_(self.layers_var[0].weight, -0.003, 0.003)
+        torch.nn.init.xavier_uniform_(self.layers_mu[0].weight)
+        torch.nn.init.uniform_(self.layers_mu[2].weight, -0.3, 0.3)
+        
+        torch.nn.init.xavier_uniform_(self.layers_var[0].weight)
+        torch.nn.init.uniform_(self.layers_var[2].weight, -0.003, 0.003)
 
         self.model_features = nn.Sequential(*self.layers_features)
         self.model_features.to(self.device)
