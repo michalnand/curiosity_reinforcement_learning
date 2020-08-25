@@ -1,7 +1,0 @@
-cd 3_atari
-./training_batch
-cd ..
-
-cd 4_super_mario
-./training_batch
-cd ..
