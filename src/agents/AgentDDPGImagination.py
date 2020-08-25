@@ -113,6 +113,7 @@ class AgentDDPGImagination():
             actions_b[n]    = actions_t.clone()
             rewards_b[n]    = rewards_t.clone()
 
+        
         rewards_b = rewards_b.squeeze(2)
 
         return states_b, actions_b, rewards_b
@@ -121,7 +122,7 @@ class AgentDDPGImagination():
         rewards_mean    = torch.mean(rewards_b, dim = 1)
         best_idx        = torch.argmax(rewards_mean)
 
-        return actions_b[best_idx][0].detach().to("cpu").numpy(), rewards_mean[best_idx].detach().to("cpu").numpy()
+        return actions_b[0][best_idx].detach().to("cpu").numpy(), rewards_mean[best_idx].detach().to("cpu").numpy()
            
         
     def train_model(self):

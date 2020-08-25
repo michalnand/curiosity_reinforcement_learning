@@ -126,7 +126,7 @@ class AgentDDPGImaginationMetaActor():
         rewards_sum = torch.sum(rewards_b, dim = 1)
         best_idx    = torch.argmax(rewards_sum)
 
-        return actions_b[best_idx][0].detach().to("cpu").numpy(), rewards_sum[best_idx].detach().to("cpu").numpy()
+        return actions_b[0][best_idx].detach().to("cpu").numpy(), rewards_sum[best_idx].detach().to("cpu").numpy()
 
     def _imagination_exploration_entropy_loss(self, initial_states_b):
         batch_size = initial_states_b.shape[0]
