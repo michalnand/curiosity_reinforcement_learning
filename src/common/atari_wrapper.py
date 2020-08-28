@@ -131,12 +131,14 @@ class ClipRewardEnv(gym.Wrapper):
 
 def AtariWrapper(env, height = 96, width = 96, frame_stacking=4, frame_skipping=4):
     env = NopOpsEnv(env)
+    env = FireResetEnv(env) 
     env = SkipEnv(env, frame_skipping)
     env = ResizeEnv(env, height, width, frame_stacking)
-    env = FireResetEnv(env) 
     env = EpisodicLifeEnv(env)
     env = ClipRewardEnv(env)
 
     env.observation_space.shape = (frame_stacking, height, width)
 
     return env
+
+

@@ -37,7 +37,7 @@ class AgentDQNCuriosity():
 
         self.model_dqn          = ModelDQN.Model(self.state_shape, self.actions_count)
         self.model_dqn_target   = ModelDQN.Model(self.state_shape, self.actions_count)
-        self.optimizer_dqn      = torch.optim.Adam(self.model_dqn.parameters(), lr= config.learning_rate, weight_decay=config.learning_rate*0.01)
+        self.optimizer_dqn      = torch.optim.Adam(self.model_dqn.parameters(), lr= config.learning_rate, weight_decay=config.learning_rate*0.0001)
 
         for target_param, param in zip(self.model_dqn_target.parameters(), self.model_dqn.parameters()):
             target_param.data.copy_(param.data)

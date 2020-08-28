@@ -28,7 +28,7 @@ class AgentDQN():
 
         self.model          = Model.Model(self.state_shape, self.actions_count)
         self.model_target   = Model.Model(self.state_shape, self.actions_count)
-        self.optimizer      = torch.optim.Adam(self.model.parameters(), lr= config.learning_rate, weight_decay=config.learning_rate*0.01)
+        self.optimizer      = torch.optim.Adam(self.model.parameters(), lr= config.learning_rate, weight_decay=config.learning_rate*0.0001)
 
         for target_param, param in zip(self.model_target.parameters(), self.model.parameters()):
             target_param.data.copy_(param.data)
